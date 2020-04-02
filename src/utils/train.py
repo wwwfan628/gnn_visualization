@@ -16,14 +16,13 @@ def evaluate_train(model, graph, features, labels, mask):
         return correct.item() * 1.0 / len(labels)
 
 
-def train_net(net, graph, features, labels, train_mask, test_mask):
+def train_net(net, graph, features, labels, train_mask, test_mask, args):
 
-    optimizer = torch.optim.Adam(net.parameters(), lr=1e-3)
+    optimizer = torch.optim.Adam(net.parameters(), lr=args.lr_train)
     dur = []
 
-    for epoch in range(500):
-        if epoch >= 3:
-            t0 = time.time()
+    for epoch in range(args.epoch_train):
+        t0 = time.time()
 
         net.train()
         logits = net(graph, features)
@@ -34,7 +33,7 @@ def train_net(net, graph, features, labels, train_mask, test_mask):
         loss.backward()
         optimizer.step()
 
-        if epoch >= 3 and epoch % 10 == 0:
+        if epoch % 10 == 0:
             dur.append(time.time() - t0)
 
             acc = evaluate_train(net, graph, features, labels, test_mask)
