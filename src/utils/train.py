@@ -41,4 +41,14 @@ def train_net(net, graph, features, labels, train_mask, test_mask, args):
                     epoch, loss.item(), acc, np.mean(dur)))
 
 
+def load_parameters(file, net):
 
+    pretrained_dict = torch.load(file)
+    model_dict = net.state_dict()
+
+    # filter out unnecessary keys
+    pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
+
+    # overwrite entries in the existing state dict
+    model_dict.update(pretrained_dict)
+    return model_dict

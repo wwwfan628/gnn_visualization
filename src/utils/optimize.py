@@ -25,7 +25,7 @@ def optmize_fixpoint(net, graph, features, args):
     optimizer = torch.optim.Adam([H], lr=args.lr_optimize)
     dur = []
 
-    while cost_func >= args.tol and epoch < args.max_epoch:
+    while cost_func >= args.tol and epoch < args.epoch_optimize:
         t0 = time.time()  # start time of current epoch
 
         F_diff = net(graph, H) - H  # the matrix we want every element in it equals 0
@@ -42,4 +42,11 @@ def optmize_fixpoint(net, graph, features, args):
             print("Epoch {:09d} | Cost Function {:.4f} | Time(s) {:.4f}".format(epoch, cost_func, np.mean(dur)))
 
         epoch += 1
+
+    if cost_func <= args.tol:
+        print("Fixpoint is founded!")
+    else:
+        print("Reached maximal number of optimization epochs!")
+
+    return H
 
