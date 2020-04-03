@@ -27,7 +27,7 @@ def main(args):
 
     # train network and save the parameters of the trained network
     mlp_gcn = MLP_GCN(1433, 720, 250, 32, 32, 32, 32, 7)
-    train_net(mlp_gcn, g, features, labels, train_mask, test_mask)
+    train_net(mlp_gcn, g, features, labels, train_mask, test_mask, args)
     file = 'parameters_cora.pkl'
     torch.save(mlp_gcn.state_dict(), file)
 
@@ -57,6 +57,7 @@ if __name__ == '__main__':
 
     print(args)
     main(args)
+    print("Finish!")
 
 
 
