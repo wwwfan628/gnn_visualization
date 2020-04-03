@@ -15,6 +15,5 @@ class GCN(nn.Module):
         h1 = F.relu(h1)
         h2 = self.gcn_layer2(graph, h1)
         h2 = F.relu(h2)
-        h3 = self.gcn_layer1(graph, h2)
-        h3 = F.relu(h3)
+        h3 = self.gcn_layer3(graph, h2)
         return h3

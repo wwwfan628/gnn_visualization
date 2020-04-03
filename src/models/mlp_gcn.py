@@ -25,5 +25,4 @@ class MLP_GCN(nn.Module):
         h6 = self.gcn_layer3(graph, h5)
         h6 = F.relu(h6)
         h7 = self.gcn_layer4(graph, h6)
-        h7 = F.relu(h7)
         return h7
