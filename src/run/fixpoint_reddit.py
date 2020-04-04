@@ -23,6 +23,7 @@ def get_parser():
 
 def main(args):
     # load cora dataset
+
     g, features, labels, train_mask, test_mask = load_reddit_data()
 
     # train network and save the parameters of the trained network
