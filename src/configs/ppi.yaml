@@ -1,0 +1,12 @@
+# Configuration file for dataset ppi
+
+# load data
+batch_size: 2
+
+# model
+hidden_features: 256
+
+# training
+train_lr: 0.005
+train_max_epoch: 500
+train_patience: 10

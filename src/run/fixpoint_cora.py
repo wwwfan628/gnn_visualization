@@ -1,9 +1,9 @@
 from src.utils.dataset import load_cora_data
-from src.utils.train import train_net
-from src.utils.train import load_parameters
+from src.utils.train_model import train_net
+from src.utils.train_model import load_parameters
 from src.utils.optimize import optmize_fixpoint
-from src.models.mlp_gcn import MLP_GCN
-from src.models.mlp import MLP
+from src.models.slp_gcn import MLP_GCN
+from src.models.slp import MLP
 from src.models.gcn import GCN
 
 import argparse

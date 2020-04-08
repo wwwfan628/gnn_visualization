@@ -1,0 +1,16 @@
+# Configuration file for dataset tu
+
+# load data
+dataset_name: 'AIDS'
+train_ratio: 0.7
+validate_ratio: 0.2
+batch_size: 20
+
+# model
+hidden_features: 64
+
+# training
+train_lr: 0.001
+train_max_epoch: 500
+train_patience: 10
+clip: 2.0
