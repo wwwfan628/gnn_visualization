@@ -2,11 +2,12 @@ import torch
 import time
 import numpy as np
 import yaml
-
+import os
 
 def optimize_graph_cora_reddit_ppi(net, graph, features, args):
 
-    config_file = 'src/configs/' + args.dataset + '.yaml'
+    path = '../configs/' + args.dataset + '.yaml'
+    config_file = os.path.join(os.getcwd(), path)
     with open(config_file, 'r') as f:
         config = yaml.load(f)
 
@@ -52,7 +53,7 @@ def optimize_graph_cora_reddit_ppi(net, graph, features, args):
 
 def optimize_graph_tu(net, dataset_reduced, args):
 
-    config_file = 'src/configs/' + args.dataset + '.yaml'
+    config_file = os.path.join(os.getcwd(), '../configs/tu.yaml' )
     with open(config_file, 'r') as f:
         config = yaml.load(f)
 

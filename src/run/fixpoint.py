@@ -9,19 +9,21 @@ from src.models.gcn import GCN
 import argparse
 import torch
 import yaml
+import os
 
 def main(args):
 
     # load dataset
     if args.dataset == 'cora' or 'reddit':
-        g, features, labels, train_mask, test_mask = load_dataset(args)
+        g, features, labels, train_mask, test_mask = load_dataset(args.dataset)
     elif args.dataset == 'ppi':
-        train_dataset, train_dataloader, valid_dataloader = load_dataset(args)
+        train_dataset, train_dataloader, valid_dataloader = load_dataset(args.dataset)
     elif args.dataset == 'tu':
-        statistics, train_dataset, train_dataloader, valid_dataloader = load_dataset(args)
+        statistics, train_dataset, train_dataloader, valid_dataloader = load_dataset(args.dataset)
 
     # build network
-    config_file = 'src/configs/' + args.dataset + '.yaml'
+    path = '../configs/' + args.dataset + '.yaml'
+    config_file = os.path.join(os.getcwd(), path)
     with open(config_file, 'r') as f:
         config = yaml.load(f)
     h_feats = config['hidden_features']

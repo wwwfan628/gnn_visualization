@@ -8,7 +8,7 @@ import networkx as nx
 import torch
 from torch.utils.data import DataLoader
 import yaml
-
+import os
 
 def load_citation(dataset):
     data = load_data(dataset)
@@ -83,7 +83,8 @@ def load_dataset(dataset):
 
     elif dataset == 'ppi':
 
-        with open('src/configs/ppi.yaml', 'r') as f:
+        config_file = os.path.join(os.getcwd(), '../configs/ppi.yaml')
+        with open(config_file, 'r') as f:
             config = yaml.load(f)
         batch_size = config['batch_size']
 
@@ -92,7 +93,8 @@ def load_dataset(dataset):
 
     elif dataset == 'tu':
 
-        with open('src/configs/tu.yaml', 'r') as f:
+        config_file = os.path.join(os.getcwd(), '../configs/tu.yaml')
+        with open(config_file, 'r') as f:
             config = yaml.load(f)
         dataset_name = config['dataset_name']
         train_ratio = config['train_ratio']
