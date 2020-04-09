@@ -79,7 +79,7 @@ def evaluate_ppi(model, valid_dataloader, loss_fcn):
             output = model(subgraph, feats.float().to(device))
             loss_data = loss_fcn(output, labels.float().to(device)).item()
             predict = np.where(output.data.cpu().numpy() >= 0.5, 1, 0)
-            score = f1_score(labels.data.numpy(), predict, average='micro')
+            score = f1_score(labels.data.cpu().numpy(), predict, average='micro')
         score_list.append(score)
         val_loss_list.append(loss_data)
     mean_score = np.array(score_list).mean()
