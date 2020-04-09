@@ -9,7 +9,7 @@ train_max_epoch: 500
 train_patience: 10
 
 # checkpoint available
-weight_path:
+model_parameter_path:
 
 # optimization
 optimize_lr: 0.005
