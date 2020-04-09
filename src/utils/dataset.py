@@ -10,8 +10,8 @@ from torch.utils.data import DataLoader
 import yaml
 import os
 
-def load_citation(dataset):
-    data = load_data(dataset)
+def load_citation(args):
+    data = load_data(args)
     features = torch.FloatTensor(data.features)
     labels = torch.LongTensor(data.labels)
     train_mask = torch.BoolTensor(data.train_mask)
@@ -23,8 +23,8 @@ def load_citation(dataset):
     g.add_edges(g.nodes(), g.nodes())
     return g, features, labels, train_mask, test_mask
 
-def load_reddit():
-    data = load_data('reddit-self-loop')
+def load_reddit(args):
+    data = load_data(args)
     features = torch.FloatTensor(data.features)
     labels = torch.LongTensor(data.labels)
     train_mask = torch.BoolTensor(data.train_mask)
@@ -71,17 +71,17 @@ def load_tu(dataset_name, train_ratio, validate_ratio, batch_size):
     valid_dataloader = DataLoader(valid_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_tu)
     return statistics, train_dataset, train_dataloader, valid_dataloader
 
-def load_dataset(dataset):
+def load_dataset(args):
 
-    if dataset == 'cora' or 'citeseer' or 'pubmed':
-        g, features, labels, train_mask, test_mask = load_citation(dataset)
+    if args.dataset == 'cora' or 'citeseer' or 'pubmed':
+        g, features, labels, train_mask, test_mask = load_citation(args)
         return g, features, labels, train_mask, test_mask
 
-    elif dataset == 'reddit':
-        g, features, labels, train_mask, test_mask = load_reddit()
+    elif args.dataset == 'reddit-self-loop':
+        g, features, labels, train_mask, test_mask = load_reddit(args)
         return g, features, labels, train_mask, test_mask
 
-    elif dataset == 'ppi':
+    elif args.dataset == 'ppi':
 
         config_file = os.path.join(os.getcwd(), '../configs/ppi.yaml')
         with open(config_file, 'r') as f:
@@ -91,7 +91,7 @@ def load_dataset(dataset):
         train_dataset, train_dataloader, valid_dataloader = load_ppi(batch_size)
         return train_dataset, train_dataloader, valid_dataloader
 
-    elif dataset == 'tu':
+    elif args.dataset == 'tu':
 
         config_file = os.path.join(os.getcwd(), '../configs/tu.yaml')
         with open(config_file, 'r') as f:
