@@ -26,7 +26,7 @@ def train_cora_reddit(net, graph, features, labels, train_mask, test_mask, args)
     path = '../configs/' + args.dataset + '.yaml'
     config_file = os.path.join(os.getcwd(), path)
     with open(config_file, 'r') as f:
-        config = yaml.load(f)
+        config = yaml.load(f, Loader=yaml.FullLoader)
 
     lr = config['train_lr']  # learning rate
     max_epoch = config['train_max_epoch']  # maximal number of training epochs
@@ -89,7 +89,7 @@ def train_ppi(net, train_dataloader, valid_dataloader, args):
 
     config_file = os.path.join(os.getcwd(), '../configs/ppi.yaml')
     with open(config_file, 'r') as f:
-        config = yaml.load(f)
+        config = yaml.load(f, Loader=yaml.FullLoader)
 
     lr = config['train_lr']  # learning rate
     max_epoch = config['train_max_epoch']  # maximal number of training epochs
@@ -154,7 +154,7 @@ def train_tu(net, train_dataloader, valid_dataloader, args):
 
     config_file = os.path.join(os.getcwd(), '../configs/tu.yaml')
     with open(config_file, 'r') as f:
-        config = yaml.load(f)
+        config = yaml.load(f, Loader=yaml.FullLoader)
 
     lr = config['train_lr']  # learning rate
     max_epoch = config['train_max_epoch']  # maximal number of training epochs

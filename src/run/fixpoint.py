@@ -27,7 +27,7 @@ def main(args):
     path = '../configs/' + args.dataset + '.yaml'
     config_file = os.path.join(os.getcwd(), path)
     with open(config_file, 'r') as f:
-        config = yaml.load(f)
+        config = yaml.load(f, Loader=yaml.FullLoader)
     h_feats = config['hidden_features']
 
     if args.dataset in 'cora, reddit-self-loop':

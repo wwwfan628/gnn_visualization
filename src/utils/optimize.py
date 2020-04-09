@@ -9,7 +9,7 @@ def optimize_graph_cora_reddit_ppi(net, graph, features, args):
     path = '../configs/' + args.dataset + '.yaml'
     config_file = os.path.join(os.getcwd(), path)
     with open(config_file, 'r') as f:
-        config = yaml.load(f)
+        config = yaml.load(f, Loader=yaml.FullLoader)
 
     lr = config['optimize_lr']  # learning rate
     max_epoch = config['optimize_max_epoch']  # maximal number of training epochs
@@ -55,7 +55,7 @@ def optimize_graph_tu(net, dataset_reduced, args):
 
     config_file = os.path.join(os.getcwd(), '../configs/tu.yaml' )
     with open(config_file, 'r') as f:
-        config = yaml.load(f)
+        config = yaml.load(f, Loader=yaml.FullLoader)
 
     lr = config['optimize_lr']  # learning rate
     max_epoch = config['optimize_max_epoch']  # maximal number of training epochs
