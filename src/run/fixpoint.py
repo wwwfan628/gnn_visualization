@@ -20,7 +20,7 @@ def main(args):
     elif args.dataset == 'tu':
         statistics, train_dataset, train_dataloader, valid_dataloader = load_dataset(args)
 
-    # train network and save the parameters of the trained network
+    # build network
     config_file = 'src/configs/' + args.dataset + '.yaml'
     with open(config_file, 'r') as f:
         config = yaml.load(f)
@@ -41,19 +41,23 @@ def main(args):
     else:
         slp_gcn = SLP_GCN_4graph(in_feats, h_feats, out_feats)
 
-    if args.dataset == 'cora' or 'reddit':
-        train_cora_reddit(slp_gcn, g, features, labels, train_mask, test_mask, args)
-    elif args.dataset == 'ppi':
-        train_ppi(slp_gcn, train_dataloader, valid_dataloader, args)
-    elif args.dataset == 'tu':
-        train_tu(slp_gcn, train_dataloader, valid_dataloader, args)
+    if args.train:   # need to train the network
+        if args.dataset == 'cora' or 'reddit':
+            train_cora_reddit(slp_gcn, g, features, labels, train_mask, test_mask, args)
+        elif args.dataset == 'ppi':
+            train_ppi(slp_gcn, train_dataloader, valid_dataloader, args)
+        elif args.dataset == 'tu':
+            train_tu(slp_gcn, train_dataloader, valid_dataloader, args)
 
-    file = 'model_parameters_' + args.dataset + '.pkl'
-    torch.save(slp_gcn.state_dict(), file)
+        model_file = 'slp_gcn_parameters_' + args.dataset + '.pkl'
+        torch.save(slp_gcn.state_dict(), model_file)
+    else:
+        model_file = 'slp_gcn_parameters_' + args.dataset + '.pkl'
+        slp_gcn.load_state_dict(model_file)
 
     # reduce/increase dimension of nodes'features
     slp = SLP(in_feats, h_feats)
-    model_dict = load_parameters(file, slp)
+    model_dict = load_parameters(model_file, slp)
     slp.load_state_dict(model_dict)
     slp.eval()
     with torch.no_grad():
@@ -68,11 +72,11 @@ def main(args):
 
     # GCN
     gcn = GCN(h_feats)
-    model_dict = load_parameters(file, gcn)
+    model_dict = load_parameters(model_file, gcn)
     gcn.load_state_dict(model_dict)
 
     # Find fixpoint
-    if args.method == 'entire_optimization':
+    if args.method == 'graph_optimization':
         if args.dataset == 'cora' or 'reddit':
             H = optimize_graph_cora_reddit_ppi(gcn, g, features_reduced, args)
         elif args.dataset == 'ppi':
@@ -91,7 +95,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Try to find fixpoint")
 
     parser.add_argument('dataset', help='choose dataset from: cora, reddit, ppi and tu')
-    parser.add_argument('method', help='choose method from: entire_optimization, node_optimization and newton_method')
+    parser.add_argument('method', help='choose method from: graph_optimization, node_optimization and newton_method')
+    parser.add_argument('--train', action='store_true', help='set true if model needs to be trained, i.e. no checkpoint available')
 
     args = parser.parse_args()
 
