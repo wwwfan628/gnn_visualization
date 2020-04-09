@@ -31,7 +31,7 @@ def train_cora_reddit(net, graph, features, labels, train_mask, test_mask, args)
     # used for early stop
     patience = config['train_patience']
     best_score = -1
-    best_loss = 100000
+    best_loss = float('inf')
     cur_step = 0
 
     optimizer = torch.optim.Adam(net.parameters(), lr=lr)
@@ -94,7 +94,7 @@ def train_ppi(net, train_dataloader, valid_dataloader, args):
     # used for early stop
     patience = config['train_patience']
     best_score = -1
-    best_loss = 100000
+    best_loss = float('inf')
     cur_step = 0
 
     optimizer = torch.optim.Adam(net.parameters(), lr=lr, weight_decay=0)
@@ -118,7 +118,7 @@ def train_ppi(net, train_dataloader, valid_dataloader, args):
         if epoch % 5 == 0:  # Validation
             dur.append(time.time() - t0)
             mean_score, mean_val_loss = evaluate_ppi(net, valid_dataloader, loss_fcn)
-            print("Epoch {:04d} | Loss: {:.4f} | Valid F1-Score: {:.4f} | Time(s) {:.4f}".format(epoch + 1, loss_data, mean_score, np.mean(dur)))
+            print("Epoch {:04d} | Loss {:.4f} | Valid F1-Score {:.4f} | Time(s) {:.4f}".format(epoch + 1, loss_data, mean_score, np.mean(dur)))
             # early stop
             if mean_score > best_score or best_loss > mean_val_loss:
                 best_score = np.max((mean_score, best_score))
@@ -161,7 +161,7 @@ def train_tu(net, train_dataloader, valid_dataloader, args):
     # used for early stop
     patience = config['train_patience']
     best_score = -1
-    best_loss = 100000
+    best_loss = float('inf')
     cur_step = 0
 
     optimizer = torch.optim.Adam(net.parameters(), lr=lr)
@@ -186,7 +186,7 @@ def train_tu(net, train_dataloader, valid_dataloader, args):
         if epoch % 5 == 0:  # validation
             dur.append(time.time() - t0)
             acc, mean_val_loss = evaluate_tu(valid_dataloader, net, loss_fcn, batch_size)
-            print("Epoch {:04d} | Loss: {:.4f} | Valid Acc: {:.4f} | Time(s) {:.4f}".format(epoch + 1, loss_data, acc, np.mean(dur)))
+            print("Epoch {:04d} | Loss {:.4f} | Valid Acc {:.4f} | Time(s) {:.4f}".format(epoch + 1, loss_data, acc, np.mean(dur)))
             # early stop
             if acc > best_score or best_loss > mean_val_loss:
                 best_score = np.max((acc, best_score))

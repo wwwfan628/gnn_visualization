@@ -1,7 +1,7 @@
 from src.utils.dataset import load_dataset
 from src.utils.train_model import train_cora_reddit, train_ppi, train_tu
 from src.utils.train_model import load_parameters
-from src.utils.optimize import optmize_fixpoint
+from src.utils.optimize import optimize_graph_cora_reddit_ppi, optimize_graph_tu
 from src.models.slp_gcn import SLP_GCN_4node, SLP_GCN_4graph
 from src.models.slp import SLP
 from src.models.gcn import GCN
@@ -18,7 +18,7 @@ def main(args):
     elif args.dataset == 'ppi':
         train_dataset, train_dataloader, valid_dataloader = load_dataset(args)
     elif args.dataset == 'tu':
-        statistics, train_dataloader, valid_dataloader = load_dataset(args)
+        statistics, train_dataset, train_dataloader, valid_dataloader = load_dataset(args)
 
     # train network and save the parameters of the trained network
     config_file = 'src/configs/' + args.dataset + '.yaml'
@@ -51,13 +51,20 @@ def main(args):
     file = 'model_parameters_' + args.dataset + '.pkl'
     torch.save(slp_gcn.state_dict(), file)
 
-    # reduce dimension of nodes'features
+    # reduce/increase dimension of nodes'features
     slp = SLP(in_feats, h_feats)
     model_dict = load_parameters(file, slp)
     slp.load_state_dict(model_dict)
     slp.eval()
     with torch.no_grad():
-        features_reduced = slp(features)
+        if args.dataset == 'cora' or 'reddit':
+            features_reduced = slp(features)
+        elif args.dataset == 'ppi':
+            features_reduced = slp(train_dataset.features)
+        elif args.dataset == 'tu':
+            train_dataset_reduced = train_dataset
+            for data in train_dataset_reduced:
+                data[0].ndata['feat'] = slp(data[0].ndata['feat'])
 
     # GCN
     gcn = GCN(h_feats)
@@ -67,11 +74,14 @@ def main(args):
     # Find fixpoint
     if args.method == 'entire_optimization':
         if args.dataset == 'cora' or 'reddit':
-            H = optmize_fixpoint(gcn, g, features_reduced, args)
+            H = optimize_graph_cora_reddit_ppi(gcn, g, features_reduced, args)
+        elif args.dataset == 'ppi':
+            H = optimize_graph_cora_reddit_ppi(gcn, train_dataset.graph, features_reduced, args)
+        elif args.dataset == 'tu':
+            H , found_indices = optimize_graph_tu(gcn, train_dataset_reduced, args)
 
 
-
-    H_file = 'H_cora.pkl'
+    H_file = 'H_' + args.dataset + '.pkl'
     torch.save(H, H_file)
 
 
@@ -88,3 +98,4 @@ if __name__ == '__main__':
     print(args)
     main(args)
     print("Finish!")
+

@@ -14,3 +14,8 @@ train_lr: 0.001
 train_max_epoch: 500
 train_patience: 10
 clip: 2.0
+
+# optimization
+optimize_lr: 0.005
+optimize_max_epoch: 100000
+optimize_tolerance: 1

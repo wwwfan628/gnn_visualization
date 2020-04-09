@@ -1,52 +1,105 @@
 import torch
 import time
 import numpy as np
+import yaml
 
 
-def evaluate_optimization(net, graph, features):
-    # used to evaluate the difference of net's input and output
-    net.eval()
-    with torch.no_grad():
-        net_out = net(graph, features)
+def optimize_graph_cora_reddit_ppi(net, graph, features, args):
 
-    F_diff = net_out - features  # the matrix we want every element in it equals 0
-    F_diff_abs = torch.abs(F_diff)
-    F_cost = torch.sum(torch.sum(F_diff_abs, dim=1))  # cost function: sum of absolute value of each element
-    return F_cost
+    config_file = 'src/configs/' + args.dataset + '.yaml'
+    with open(config_file, 'r') as f:
+        config = yaml.load(f)
 
+    lr = config['optimize_lr']  # learning rate
+    max_epoch = config['optimize_max_epoch']  # maximal number of training epochs
+    tol = config['optimize_tolerance']
+    min_cost_func = float('inf')
 
-def optmize_fixpoint(net, graph, features, args):
-    H = features  # set input of network as H
-    H.requires_grad_(True)  # To compute gradient
+    H = features.clone().detach().requires_grad_(True)  # set input of network as H
 
-    epoch = 0  # number of iterations of optimization
-    cost_func = 100000  # initialize cost_func to a random value > tolerance
+    epoch = 0  # current iteration of optimization
+    F_cost = float('inf')  # initialize cost_func to a random value > tolerance
 
-    optimizer = torch.optim.Adam([H], lr=args.lr_optimize)
+    optimizer = torch.optim.Adam([H], lr=lr)
     dur = []
 
-    while cost_func >= args.tol and epoch < args.epoch_optimize:
+    while F_cost > tol and epoch < max_epoch:
         t0 = time.time()  # start time of current epoch
 
         F_diff = net(graph, H) - H  # the matrix we want every element in it equals 0
         F_diff_abs = torch.abs(F_diff)
         F_cost = torch.sum(torch.sum(F_diff_abs, dim=1))  # cost function: sum of absolute value of each element
 
+        if F_cost < min_cost_func:
+            min_cost_func = F_cost.item()
+            H_min_cost_func = H.clone().detach()
+
         optimizer.zero_grad()
         F_cost.backward()
         optimizer.step()
 
-        if epoch % 1000 == 0:
+        if epoch % 100 == 0:
             dur.append(time.time() - t0)
-            cost_func = evaluate_optimization(net, graph, H)
-            print("Epoch {:09d} | Cost Function {:.4f} | Time(s) {:.4f}".format(epoch, cost_func, np.mean(dur)))
-
+            print("Epoch {:07d} | Cost Function {:.4f} | Time(s) {:.4f}".format(epoch, F_cost, np.mean(dur)))
         epoch += 1
 
-    if cost_func <= args.tol:
-        print("Fixpoint is founded!")
+    if F_cost <= tol:
+        print("Fixpoint is found!")
     else:
-        print("Reached maximal number of optimization epochs!")
+        print("Reached maximal number of epochs! Current min cost function value: {:.4f}".format(min_cost_func))
+    return H_min_cost_func
 
-    return H
 
+def optimize_graph_tu(net, dataset_reduced, args):
+
+    config_file = 'src/configs/' + args.dataset + '.yaml'
+    with open(config_file, 'r') as f:
+        config = yaml.load(f)
+
+    lr = config['optimize_lr']  # learning rate
+    max_epoch = config['optimize_max_epoch']  # maximal number of training epochs
+    tol = config['optimize_tolerance']
+    min_cost_func = float('inf')
+
+    H_min_cost_func = []
+    fixpoint_found_graph_ind = np.empty(len(dataset_reduced))
+    for graph_id, data in enumerate(dataset_reduced):  # loop over each graph
+        graph = data[0]
+        H = graph.ndata['feat'].clone().detach().requires_grad_(True) # set input of network as H
+
+        epoch = 0  # current iteration of optimization
+        F_cost = float('inf')  # initialize cost_func to a random value > tolerance
+
+        optimizer = torch.optim.Adam([H], lr=lr)
+        dur = []
+
+        while F_cost > tol and epoch < max_epoch:
+            t0 = time.time()  # start time of current epoch
+
+            F_diff = net(graph, H) - H  # the matrix we want every element in it equals 0
+            F_diff_abs = torch.abs(F_diff)
+            F_cost = torch.sum(torch.sum(F_diff_abs, dim=1))  # cost function: sum of absolute value of each element
+
+            if F_cost < min_cost_func:
+                min_cost_func = F_cost.item()
+                H_min_cost_func_current_graph = H.clone().detach()
+
+            optimizer.zero_grad()
+            F_cost.backward()
+            optimizer.step()
+
+            if epoch % 100 == 0:
+                dur.append(time.time() - t0)
+                print("Graph ID {:06d} | Epoch {:07d} | Cost Function {:.4f} | Time(s) {:.4f}".format(graph_id, epoch, F_cost, np.mean(dur)))
+            epoch += 1
+
+        if F_cost <= tol:
+            print("Fixpoint for graph {} is found!".format(graph_id))
+            fixpoint_found_graph_ind[graph_id] = True
+        else:
+            print("Reached maximal number of epochs! Current min cost function value for graph {}: {:.4f}".format(min_cost_func))
+            fixpoint_found_graph_ind[graph_id] = False
+
+        H_min_cost_func.append(H_min_cost_func_current_graph)
+
+    return H_min_cost_func, fixpoint_found_graph_ind
