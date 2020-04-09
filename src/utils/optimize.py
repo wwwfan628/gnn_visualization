@@ -60,11 +60,12 @@ def optimize_graph_tu(net, dataset_reduced, args):
     lr = config['optimize_lr']  # learning rate
     max_epoch = config['optimize_max_epoch']  # maximal number of training epochs
     tol = config['optimize_tolerance']
-    min_cost_func = float('inf')
 
     H_min_cost_func = []
     fixpoint_found_graph_ind = np.empty(len(dataset_reduced))
     for graph_id, data in enumerate(dataset_reduced):  # loop over each graph
+
+        min_cost_func = float('inf')
         graph = data[0]
         H = graph.ndata['feat'].clone().detach().requires_grad_(True) # set input of network as H
 
@@ -98,7 +99,7 @@ def optimize_graph_tu(net, dataset_reduced, args):
             print("Fixpoint for graph {} is found!".format(graph_id))
             fixpoint_found_graph_ind[graph_id] = True
         else:
-            print("Reached maximal number of epochs! Current min cost function value for graph {}: {:.4f}".format(min_cost_func))
+            print("Reached maximal number of epochs! Current min cost function value for graph {}: {:.4f}".format(graph_id, min_cost_func))
             fixpoint_found_graph_ind[graph_id] = False
 
         H_min_cost_func.append(H_min_cost_func_current_graph)

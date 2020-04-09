@@ -5,7 +5,7 @@ hidden_features: 72
 
 # training
 train_lr: 0.001
-train_max_epoch: 500
+train_max_epoch: 2
 train_patience: 10
 
 # checkpoint available
@@ -13,5 +13,5 @@ model_parameter_path:
 
 # optimization
 optimize_lr: 0.005
-optimize_max_epoch: 1000000
+optimize_max_epoch: 5
 optimize_tolerance: 1

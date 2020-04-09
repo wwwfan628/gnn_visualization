@@ -4,6 +4,7 @@ import numpy as np
 import torch.nn.functional as F
 import torch.nn as nn
 import yaml
+import os
 from sklearn.metrics import f1_score
 
 def evaluate_cora_reddit(model, graph, features, labels, mask):
@@ -22,7 +23,8 @@ def evaluate_cora_reddit(model, graph, features, labels, mask):
 
 
 def train_cora_reddit(net, graph, features, labels, train_mask, test_mask, args):
-    config_file = 'src/configs/' + args.dataset + '.yaml'
+    path = '../configs/' + args.dataset + '.yaml'
+    config_file = os.path.join(os.getcwd(), path)
     with open(config_file, 'r') as f:
         config = yaml.load(f)
 
@@ -85,7 +87,7 @@ def evaluate_ppi(model, valid_dataloader, loss_fcn):
 
 def train_ppi(net, train_dataloader, valid_dataloader, args):
 
-    config_file = 'src/configs/' + args.dataset + '.yaml'
+    config_file = os.path.join(os.getcwd(), '../configs/ppi.yaml')
     with open(config_file, 'r') as f:
         config = yaml.load(f)
 
@@ -150,7 +152,7 @@ def evaluate_tu(valid_dataloader, model, loss_fcn, batch_size):
 
 def train_tu(net, train_dataloader, valid_dataloader, args):
 
-    config_file = 'src/configs/' + args.dataset + '.yaml'
+    config_file = os.path.join(os.getcwd(), '../configs/tu.yaml')
     with open(config_file, 'r') as f:
         config = yaml.load(f)
 

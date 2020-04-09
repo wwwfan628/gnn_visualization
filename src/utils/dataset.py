@@ -73,7 +73,7 @@ def load_tu(dataset_name, train_ratio, validate_ratio, batch_size):
 
 def load_dataset(args):
 
-    if args.dataset == 'cora' or 'citeseer' or 'pubmed':
+    if args.dataset in 'cora, citeseer, pubmed':
         g, features, labels, train_mask, test_mask = load_citation(args)
         return g, features, labels, train_mask, test_mask
 
@@ -101,7 +101,7 @@ def load_dataset(args):
         validate_ratio = config['validate_ratio']
         batch_size = config['batch_size']
 
-        statistics, train_dataloader, valid_dataloader = load_tu(dataset_name, train_ratio, validate_ratio, batch_size)
-        return statistics, train_dataloader, valid_dataloader
+        statistics, train_dataset, train_dataloader, valid_dataloader = load_tu(dataset_name, train_ratio, validate_ratio, batch_size)
+        return statistics, train_dataset, train_dataloader, valid_dataloader
 
 
