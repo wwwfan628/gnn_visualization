@@ -4,6 +4,8 @@ import numpy as np
 import yaml
 import os
 
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
 def optimize_graph_cora_reddit_ppi(net, graph, features, args):
 
     path = '../configs/' + args.dataset + '.yaml'
@@ -16,7 +18,7 @@ def optimize_graph_cora_reddit_ppi(net, graph, features, args):
     tol = config['optimize_tolerance']
     min_cost_func = float('inf')
 
-    H = features.clone().detach().requires_grad_(True)  # set input of network as H
+    H = features.clone().detach().requires_grad_(True).to(device)  # set input of network as H
 
     epoch = 0  # current iteration of optimization
     F_cost = float('inf')  # initialize cost_func to a random value > tolerance
@@ -67,7 +69,7 @@ def optimize_graph_tu(net, dataset_reduced, args):
 
         min_cost_func = float('inf')
         graph = data[0]
-        H = graph.ndata['feat'].clone().detach().requires_grad_(True) # set input of network as H
+        H = graph.ndata['feat'].clone().detach().requires_grad_(True).to(device) # set input of network as H
 
         epoch = 0  # current iteration of optimization
         F_cost = float('inf')  # initialize cost_func to a random value > tolerance

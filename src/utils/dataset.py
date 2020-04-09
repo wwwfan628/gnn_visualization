@@ -10,12 +10,14 @@ from torch.utils.data import DataLoader
 import yaml
 import os
 
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
 def load_citation(args):
     data = load_data(args)
-    features = torch.FloatTensor(data.features)
-    labels = torch.LongTensor(data.labels)
-    train_mask = torch.BoolTensor(data.train_mask)
-    test_mask = torch.BoolTensor(data.test_mask)
+    features = torch.FloatTensor(data.features).to(device)
+    labels = torch.LongTensor(data.labels).to(device)
+    train_mask = torch.BoolTensor(data.train_mask).to(device)
+    test_mask = torch.BoolTensor(data.test_mask).to(device)
     g = data.graph
     # add self loop
     g.remove_edges_from(nx.selfloop_edges(g))
@@ -25,18 +27,18 @@ def load_citation(args):
 
 def load_reddit(args):
     data = load_data(args)
-    features = torch.FloatTensor(data.features)
-    labels = torch.LongTensor(data.labels)
-    train_mask = torch.BoolTensor(data.train_mask)
-    test_mask = torch.BoolTensor(data.test_mask)
+    features = torch.FloatTensor(data.features).to(device)
+    labels = torch.LongTensor(data.labels).to(device)
+    train_mask = torch.BoolTensor(data.train_mask).to(device)
+    test_mask = torch.BoolTensor(data.test_mask).to(device)
     g = data.graph
     return g, features, labels, train_mask, test_mask
 
 def collate_ppi(sample):
     graphs, feats, labels =map(list, zip(*sample))
     graph = dgl.batch(graphs)
-    feats = torch.from_numpy(np.concatenate(feats))
-    labels = torch.from_numpy(np.concatenate(labels))
+    feats = torch.from_numpy(np.concatenate(feats)).to(device)
+    labels = torch.from_numpy(np.concatenate(labels)).to(device)
     return graph, feats, labels
 
 def load_ppi(batch_size):
@@ -52,10 +54,10 @@ def collate_tu(batch):
     # batch graphs and cast to PyTorch tensor
     for graph in graphs:
         for (key, value) in graph.ndata.items():
-            graph.ndata[key] = torch.FloatTensor(value.float())
+            graph.ndata[key] = torch.FloatTensor(value.float()).to(device)
     batched_graphs = dgl.batch(graphs)
     # cast to PyTorch tensor
-    batched_labels = torch.LongTensor(np.array(labels))
+    batched_labels = torch.LongTensor(np.array(labels)).to(device)
     return batched_graphs, batched_labels
 
 def load_tu(dataset_name, train_ratio, validate_ratio, batch_size):

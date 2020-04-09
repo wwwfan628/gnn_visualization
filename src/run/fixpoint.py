@@ -11,8 +11,9 @@ import torch
 import yaml
 import os
 
-def main(args):
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+def main(args):
     # load dataset
     print("********** LOAD DATASET **********")
     if args.dataset in 'cora, reddit-self-loop':
@@ -41,9 +42,9 @@ def main(args):
         out_feats = statistics[1]
 
     if args.dataset != 'tu':
-        slp_gcn = SLP_GCN_4node(in_feats, h_feats, out_feats)
+        slp_gcn = SLP_GCN_4node(in_feats, h_feats, out_feats).to(device)
     else:
-        slp_gcn = SLP_GCN_4graph(in_feats, h_feats, out_feats)
+        slp_gcn = SLP_GCN_4graph(in_feats, h_feats, out_feats).to(device)
 
     if args.train:   # need to train the network
         print("********** TRAIN NETWORK **********")
@@ -62,7 +63,7 @@ def main(args):
 
     # reduce/increase dimension of nodes'features
     print("********** PREPROCESS FEATURES **********")
-    slp = SLP(in_feats, h_feats)
+    slp = SLP(in_feats, h_feats).to(device)
     model_dict = load_parameters(model_file, slp)
     slp.load_state_dict(model_dict)
     slp.eval()
@@ -70,15 +71,15 @@ def main(args):
         if args.dataset in 'cora, reddit-self-loop':
             features_reduced = slp(features)
         elif args.dataset == 'ppi':
-            features = torch.from_numpy(train_dataset.features)
+            features = torch.from_numpy(train_dataset.features).to(device)
             features_reduced = slp(features.float())
         elif args.dataset == 'tu':
             train_dataset_reduced = train_dataset
             for data in train_dataset_reduced:
-                data[0].ndata['feat'] = slp(data[0].ndata['feat'])
+                data[0].ndata['feat'] = slp(data[0].ndata['feat'].to(device))
 
     # GCN
-    gcn = GCN(h_feats)
+    gcn = GCN(h_feats).to(device)
     model_dict = load_parameters(model_file, gcn)
     gcn.load_state_dict(model_dict)
 

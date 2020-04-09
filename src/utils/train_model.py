@@ -7,6 +7,8 @@ import yaml
 import os
 from sklearn.metrics import f1_score
 
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
 def evaluate_cora_reddit(model, graph, features, labels, mask):
     # used to evaluate the performance of the model on test dataset
     model.eval()
@@ -74,10 +76,10 @@ def evaluate_ppi(model, valid_dataloader, loss_fcn):
     for batch, (subgraph, feats, labels) in enumerate(valid_dataloader):
         model.eval()
         with torch.no_grad():
-            output = model(subgraph, feats.float())
-            loss_data = loss_fcn(output, labels.float()).item()
+            output = model(subgraph, feats.float().to(device))
+            loss_data = loss_fcn(output, labels.float().to(device)).item()
             predict = np.where(output.data.cpu().numpy() >= 0.5, 1, 0)
-            score = f1_score(labels.data.cpu().numpy(), predict, average='micro')
+            score = f1_score(labels.data.to(device).numpy(), predict, average='micro')
         score_list.append(score)
         val_loss_list.append(loss_data)
     mean_score = np.array(score_list).mean()
@@ -109,8 +111,8 @@ def train_ppi(net, train_dataloader, valid_dataloader, args):
         net.train()
         loss_list = []
         for batch, (subgraph, feats, labels) in enumerate(train_dataloader):
-            logits = net(subgraph, feats.float())
-            loss = loss_fcn(logits, labels.float())
+            logits = net(subgraph, feats.float().to(device))
+            loss = loss_fcn(logits, labels.float().to(device))
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
@@ -139,8 +141,8 @@ def evaluate_tu(valid_dataloader, model, loss_fcn, batch_size):
     for batch_idx, (batch_graph, graph_labels) in enumerate(valid_dataloader):
         model.eval()
         with torch.no_grad():
-            ypred = model(batch_graph, batch_graph.ndata['feat'])
-            loss = loss_fcn(ypred, graph_labels).item()
+            ypred = model(batch_graph, batch_graph.ndata['feat'].to(device))
+            loss = loss_fcn(ypred, graph_labels.to(device)).item()
             indi = torch.argmax(ypred, dim=1)
             correct = torch.sum(indi == graph_labels)
             correct_label += correct.item()
@@ -177,8 +179,8 @@ def train_tu(net, train_dataloader, valid_dataloader, args):
         loss_list = []
         for (batch_idx, (batch_graph, graph_labels)) in enumerate(train_dataloader):
             net.zero_grad()
-            ypred = net(batch_graph, batch_graph.ndata['feat'])
-            loss = loss_fcn(ypred, graph_labels)
+            ypred = net(batch_graph, batch_graph.ndata['feat'].to(device))
+            loss = loss_fcn(ypred, graph_labels.to(device))
             loss.backward()
             nn.utils.clip_grad_norm_(net.parameters(), clip)
             optimizer.step()
