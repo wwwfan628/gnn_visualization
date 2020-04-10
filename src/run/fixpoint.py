@@ -102,7 +102,7 @@ def main(args):
             pass
             #H , found_indices = optimize_node_tu(gcn, train_dataset_reduced, args)  # TODO: implement node optimization for tu
 
-    H_file = 'H_' + args.dataset + '.pkl'
+    H_file = 'H_' + args.dataset + args.method + '.pkl'
     torch.save(H, H_file)
 
 
