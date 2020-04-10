@@ -58,7 +58,8 @@ def main(args):
         model_file = 'slp_gcn_parameters_' + args.dataset + '.pkl'
         torch.save(slp_gcn.state_dict(), model_file)
     else:
-        model_file = 'slp_gcn_parameters_' + args.dataset + '.pkl'
+        path = 'slp_gcn_parameters_' + args.dataset + '.pkl'
+        model_file = os.path.join(os.getcwd(), path)
         slp_gcn.load_state_dict(model_file)
 
     # reduce/increase dimension of nodes'features
