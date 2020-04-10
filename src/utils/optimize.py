@@ -131,14 +131,14 @@ def optimize_node_cora_reddit_ppi(net, graph, features, args):
         H = torch.empty(features.shape).requires_grad_(False).to(device)
         H[:node_id+1] = features[:node_id+1].clone().detach().requires_grad_(False).to(device)
         H[node_id+1:] = features[node_id+1:].clone().detach().requires_grad_(False).to(device)
-        H[node_id] = node_features.to(device)
+
 
         optimizer = torch.optim.Adam([node_features], lr=lr)
         dur = []
 
         while F_cost > tol and epoch < max_epoch:
             t0 = time.time()  # start time of current epoch
-
+            H[node_id] = node_features.to(device)
             F_diff = net(graph, H) - H  # the matrix we want every element in it equals 0
             F_diff_abs = torch.abs(F_diff)
             F_cost = torch.sum(F_diff_abs, dim=1)[node_id]  # cost function: sum of absolute value of each element
@@ -150,7 +150,6 @@ def optimize_node_cora_reddit_ppi(net, graph, features, args):
             optimizer.zero_grad()
             F_cost.backward(retain_graph=True)
             optimizer.step()
-            H[node_id] = node_features.to(device)
 
             if epoch % 100 == 0:
                 dur.append(time.time() - t0)
