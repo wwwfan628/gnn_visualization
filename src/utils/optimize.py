@@ -166,4 +166,6 @@ def optimize_node_cora_reddit_ppi(net, graph, features, args):
 
         H_min_cost_func[node_id, :] = H_min_cost_func_node
 
+    num_found = fixpoint_found_node_ind[fixpoint_found_node_ind==True].shape[0]
+    print("The number of nodes successfully finding fixpoint: {} ".format(num_found))
     return H_min_cost_func, fixpoint_found_node_ind

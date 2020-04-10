@@ -91,17 +91,16 @@ def main(args):
         elif args.dataset == 'ppi':
             H = optimize_graph_cora_reddit_ppi(gcn, train_dataset.graph, features_reduced, args)
         elif args.dataset == 'tu':
-            H , found_indices = optimize_graph_tu(gcn, train_dataset_reduced, args)
+            H , found_indices = optimize_graph_tu(gcn, train_dataset_reduced, args) # TODO: debug graph optimization for tu
     elif args.method == 'node_optimization':
         print("********** OPTIMIZATION ON EACH NODE **********")
         if args.dataset in 'cora, reddit-self-loop':
             H, found_indices = optimize_node_cora_reddit_ppi(gcn, g, features_reduced, args)
         elif args.dataset == 'ppi':
-            H = optimize_node_cora_reddit_ppi(gcn, train_dataset.graph, features_reduced, args)
+            H, found_indices = optimize_node_cora_reddit_ppi(gcn, train_dataset.graph, features_reduced, args)
         elif args.dataset == 'tu':
             pass
-            #H , found_indices = optimize_node_tu(gcn, train_dataset_reduced, args)
-
+            #H , found_indices = optimize_node_tu(gcn, train_dataset_reduced, args)  # TODO: implement node optimization for tu
 
     H_file = 'H_' + args.dataset + '.pkl'
     torch.save(H, H_file)
