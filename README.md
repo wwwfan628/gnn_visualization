@@ -1,4 +1,4 @@
-# gnn_visualization
+# GNN Visualization
 Semester Project: GNN Visualization
 ## Usage
 All commands should be executed within the `src/run` subfolder. The relevant configuration files for training and optimization are in `src/configs/`. 
