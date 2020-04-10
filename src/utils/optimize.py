@@ -148,7 +148,7 @@ def optimize_node_cora_reddit_ppi(net, graph, features, args):
                 H_min_cost_func_node = node_features.clone().detach()
 
             optimizer.zero_grad()
-            F_cost.backward()
+            F_cost.backward(retain_graph=True)
             optimizer.step()
             H[node_id] = node_features
 
