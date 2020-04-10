@@ -60,7 +60,7 @@ def main(args):
     else:
         path = 'slp_gcn_parameters_' + args.dataset + '.pkl'
         model_file = os.path.join(os.getcwd(), path)
-        slp_gcn.load_state_dict(model_file)
+        slp_gcn.load_state_dict(torch.load(model_file))
 
     # reduce/increase dimension of nodes'features
     print("********** PREPROCESS FEATURES **********")
