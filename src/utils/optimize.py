@@ -150,7 +150,7 @@ def optimize_node_cora_reddit_ppi(net, graph, features, args):
             optimizer.zero_grad()
             F_cost.backward(retain_graph=True)
             optimizer.step()
-            H[node_id] = node_features
+            H[node_id] = node_features.to(device)
 
             if epoch % 100 == 0:
                 dur.append(time.time() - t0)
