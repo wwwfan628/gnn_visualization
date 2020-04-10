@@ -1,7 +1,7 @@
 from src.utils.dataset import load_dataset
 from src.utils.train_model import train_cora_reddit, train_ppi, train_tu
 from src.utils.train_model import load_parameters
-from src.utils.optimize import optimize_graph_cora_reddit_ppi, optimize_graph_tu
+from src.utils.optimize import optimize_graph_cora_reddit_ppi, optimize_graph_tu, optimize_node_cora_reddit_ppi
 from src.models.slp_gcn import SLP_GCN_4node, SLP_GCN_4graph
 from src.models.slp import SLP
 from src.models.gcn import GCN
@@ -95,11 +95,9 @@ def main(args):
     elif args.method == 'node_optimization':
         print("********** OPTIMIZATION ON EACH NODE **********")
         if args.dataset in 'cora, reddit-self-loop':
-            pass
-            #H = optimize_node_cora_reddit_ppi(gcn, g, features_reduced, args)
+            H, found_indices = optimize_node_cora_reddit_ppi(gcn, g, features_reduced, args)
         elif args.dataset == 'ppi':
-            pass
-            #H = optimize_node_cora_reddit_ppi(gcn, train_dataset.graph, features_reduced, args)
+            H = optimize_node_cora_reddit_ppi(gcn, train_dataset.graph, features_reduced, args)
         elif args.dataset == 'tu':
             pass
             #H , found_indices = optimize_node_tu(gcn, train_dataset_reduced, args)

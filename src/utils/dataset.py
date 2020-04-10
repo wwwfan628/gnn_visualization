@@ -87,7 +87,7 @@ def load_dataset(args):
 
         config_file = os.path.join(os.getcwd(), '../configs/ppi.yaml')
         with open(config_file, 'r') as f:
-            config = yaml.load(f)
+            config = yaml.load(f, Loader=yaml.FullLoader)
         batch_size = config['batch_size']
 
         train_dataset, train_dataloader, valid_dataloader = load_ppi(batch_size)
@@ -97,7 +97,7 @@ def load_dataset(args):
 
         config_file = os.path.join(os.getcwd(), '../configs/tu.yaml')
         with open(config_file, 'r') as f:
-            config = yaml.load(f)
+            config = yaml.load(f, Loader=yaml.FullLoader)
         dataset_name = config['dataset_name']
         train_ratio = config['train_ratio']
         validate_ratio = config['validate_ratio']
