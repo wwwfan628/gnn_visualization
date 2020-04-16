@@ -15,16 +15,8 @@ set -o errexit
 
 # binary to execute
 export PYTHONPATH=/home/yiflu/Desktop/gnn_visualization
-cd ./src/run
-read -p "Choose dataset from cora, reddit-self-loop, ppi and tu: " dataset
-read -p "Choose the way to find fixpoint from graph_optimization, node_graph_optimization and newton_method: " method
-read -p "Training needed, i.e. checkpoint of network not available? True or False: " train_needed
-if [ $train_needed == 'True' ]
-then
-  python ./fixpoint.py $dataset $method --train
-else
-  python ./fixpoint.py $dataset $method --train
-fi
+cd /home/yiflu/Desktop/gnn_visualization/src/run
+python ./fixpoint.py cora graph_optimization --train
 
 echo finished at: `date`
 exit 0;
