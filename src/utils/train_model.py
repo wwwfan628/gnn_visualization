@@ -154,7 +154,8 @@ def evaluate_tu(valid_dataloader, model, loss_fcn, batch_size):
 
 def train_tu(net, train_dataloader, valid_dataloader, args):
 
-    config_file = os.path.join(os.getcwd(), '../configs/tu.yaml')
+    path = '../configs/' + args.dataset + '.yaml'
+    config_file = os.path.join(os.getcwd(), path)
     with open(config_file, 'r') as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
 

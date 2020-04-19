@@ -93,9 +93,10 @@ def load_dataset(args):
         train_dataset, train_dataloader, valid_dataloader = load_ppi(batch_size)
         return train_dataset, train_dataloader, valid_dataloader
 
-    elif args.dataset == 'tu':
+    elif args.dataset in 'aids, imdb-binary, reddit-binary':
 
-        config_file = os.path.join(os.getcwd(), '../configs/tu.yaml')
+        path = '../configs/' + args.dataset + '.yaml'
+        config_file = os.path.join(os.getcwd(), path)
         with open(config_file, 'r') as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
         dataset_name = config['dataset_name']
