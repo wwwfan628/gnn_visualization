@@ -44,7 +44,7 @@ def main(args):
         if args.dataset == 'reddit-binary':
             out_feats = out_feats - 1
 
-    if not args.dataset in '':
+    if not args.dataset in 'aids, imdb-binary, reddit-binary':
         slp_gcn = SLP_GCN_4node(in_feats, h_feats, out_feats).to(device)
     else:
         slp_gcn = SLP_GCN_4graph(in_feats, h_feats, out_feats).to(device)
@@ -80,7 +80,7 @@ def main(args):
         elif args.dataset in 'aids, imdb-binary, reddit-binary':
             train_dataset_reduced = train_dataset
             for data in train_dataset_reduced:
-                data[0].ndata['feat'] = slp(data[0].ndata['feat'].to(device))
+                data[0].ndata['feat'] = slp(data[0].ndata['feat'].float().to(device))
 
     # GCN
     gcn = GCN(h_feats).to(device)

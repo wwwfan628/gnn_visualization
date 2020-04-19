@@ -60,9 +60,29 @@ def collate_tu(batch):
     batched_labels = torch.LongTensor(np.array(labels)).to(device)
     return batched_graphs, batched_labels
 
-def load_tu(dataset_name, train_ratio, validate_ratio, batch_size):
+def load_tu_with_node_feat(dataset_name, train_ratio, validate_ratio, batch_size):
     dataset = LegacyTUDataset(name=dataset_name)
     statistics = dataset.statistics()
+    train_size = int(train_ratio * len(dataset))
+    valid_size = int(validate_ratio * len(dataset))
+    test_size = int(len(dataset) - train_size - valid_size)
+
+    train_dataset, valid_dataset, test_dataset = torch.utils.data.random_split(dataset, (train_size, valid_size, test_size))
+
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_tu)
+    valid_dataloader = DataLoader(valid_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_tu)
+    return statistics, train_dataset, train_dataloader, valid_dataloader
+
+def load_tu_without_node_feat(dataset_name, train_ratio, validate_ratio, batch_size):
+    dataset = LegacyTUDataset(name=dataset_name)
+
+    # use degere of node to replace default constant node features
+    for graph_id, data in enumerate(dataset):
+        data[0].ndata['feat'] = data[0].in_degrees().view(-1, 1).float()
+
+    statistics = dataset.statistics()
+    print("Use degere of node to replace default constant node features, current feature dimension: {}.".format(statistics[0]))
+
     train_size = int(train_ratio * len(dataset))
     valid_size = int(validate_ratio * len(dataset))
     test_size = int(len(dataset) - train_size - valid_size)
@@ -104,7 +124,10 @@ def load_dataset(args):
         validate_ratio = config['validate_ratio']
         batch_size = config['batch_size']
 
-        statistics, train_dataset, train_dataloader, valid_dataloader = load_tu(dataset_name, train_ratio, validate_ratio, batch_size)
+        if args.dataset == 'aids':
+            statistics, train_dataset, train_dataloader, valid_dataloader = load_tu_with_node_feat(dataset_name, train_ratio, validate_ratio, batch_size)
+        else:
+            statistics, train_dataset, train_dataloader, valid_dataloader = load_tu_without_node_feat(dataset_name,train_ratio, validate_ratio, batch_size)
         return statistics, train_dataset, train_dataloader, valid_dataloader
 
 

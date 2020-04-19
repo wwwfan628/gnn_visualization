@@ -11,7 +11,7 @@ hidden_features: 64
 
 # training
 train_lr: 0.001
-train_max_epoch: 2
+train_max_epoch: 500
 train_patience: 10
 clip: 2.0
 

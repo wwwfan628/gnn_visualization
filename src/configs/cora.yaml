@@ -5,7 +5,7 @@ hidden_features: 32
 
 # training
 train_lr: 0.001
-train_max_epoch: 10
+train_max_epoch: 500
 train_patience: 10
 
 # checkpoint available

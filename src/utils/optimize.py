@@ -187,7 +187,7 @@ def optimize_node_tu(net, dataset_reduced, args):
     for graph_id, data in enumerate(dataset_reduced):  # loop over each graph
 
         graph = data[0]
-        features = data[0].nadata['feat'].clone().detach()
+        features = data[0].ndata['feat']
 
         H_min_cost_func_graph = torch.zeros(features.shape).to(device)
         fixpoint_found_node_ind = torch.empty(features.shape[0]).to(device)
@@ -223,7 +223,7 @@ def optimize_node_tu(net, dataset_reduced, args):
 
                 if epoch % 100 == 0:
                     dur.append(time.time() - t0)
-                    print("Graph ID {:06d} | Epoch {:07d} | Cost Function {:.4f} | Time(s) {:.4f}".format(graph_id, epoch, F_cost, np.mean(dur)))
+                    print("Graph ID {:06d} | Node ID {} | Epoch {:07d} | Cost Function {:.4f} | Time(s) {:.4f}".format(graph_id, node_id, epoch, F_cost, np.mean(dur)))
                 epoch += 1
 
             if F_cost <= tol:
