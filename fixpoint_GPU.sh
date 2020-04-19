@@ -15,6 +15,7 @@ set -o errexit
 
 # binary to execute
 export PYTHONPATH=/home/yiflu/Desktop/gnn_visualization
+export CUDA_VISIBLE_DEVICES=0
 cd /home/yiflu/Desktop/gnn_visualization/src/run
 python ./fixpoint.py cora graph_optimization --train
 

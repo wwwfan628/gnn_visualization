@@ -12,6 +12,7 @@ import yaml
 import os
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+print("RUNNING ON: {}".format(device))
 
 def main(args):
     # load dataset
@@ -60,7 +61,7 @@ def main(args):
     else:
         path = 'slp_gcn_parameters_' + args.dataset + '.pkl'
         model_file = os.path.join(os.getcwd(), path)
-        slp_gcn.load_state_dict(torch.load(model_file))
+        slp_gcn.load_state_dict(torch.load(model_file, map_location=device))
 
     # reduce/increase dimension of nodes'features
     print("********** PREPROCESS FEATURES **********")
