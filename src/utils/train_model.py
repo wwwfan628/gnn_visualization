@@ -203,7 +203,7 @@ def train_tu(net, train_dataloader, valid_dataloader, args):
 
 def load_parameters(file, net):
 
-    pretrained_dict = torch.load(file)
+    pretrained_dict = torch.load(file, map_location=device)
     model_dict = net.state_dict()
 
     # filter out unnecessary keys
