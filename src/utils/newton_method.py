@@ -17,7 +17,7 @@ def newton_method_cora_reddit_ppi(net, graph, features, args):
     tol = config['newton_method']['tolerance']
     min_func_abs_sum = float('inf')
 
-    H = features.clone().detach().requires_grad_(True)
+    H = features.clone().detach().requires_grad_(True).to(device)
     H_diff = float('inf')  # Difference between H before and after one iteration
     epoch = 0
 
@@ -30,22 +30,22 @@ def newton_method_cora_reddit_ppi(net, graph, features, args):
         func_abs_sum = torch.sum(torch.sum(torch.abs(func), dim=1))
         if func_abs_sum < min_func_abs_sum:
             min_func_abs_sum = func_abs_sum
-            H_min_func_abs_sum = H.clone().detach()
+            H_min_func_abs_sum = H.clone().detach().to(device)
             min_epoch = epoch
 
         num_elements = features.shape[0] * features.shape[1]
         func_resize = func.view(num_elements, 1)
 
-        gradient = torch.zeros([num_elements, num_elements])
+        gradient = torch.zeros([num_elements, num_elements]).to(device)
 
         for index in np.arange(num_elements):
             func_resize[index].backward(retain_graph=True)
-            gradient[index, :] = H.grad.view(1, num_elements).clone().detach()
+            gradient[index, :] = H.grad.view(1, num_elements).clone().detach().to(device)
             H.grad.data.zero_()
 
-        H_resize = H.view(num_elements, 1).clone().detach()
+        H_resize = H.view(num_elements, 1).clone().detach().to(device)
         H_resize_new = H_resize - torch.mm(gradient.inverse(), func_resize)
-        H = H_resize_new.view(H.shape).clone().detach().requires_grad_(True)
+        H = H_resize_new.view(H.shape).clone().detach().requires_grad_(True).to(device)
 
         H_diff = torch.sum(torch.abs(H_resize - H_resize_new))
         if epoch % 1 == 0:
@@ -79,7 +79,7 @@ def newton_method_tu(net, dataset_reduced, args):
 
         graph = data[0]
         features = data[0].ndata['feat']
-        H = features.clone().detach().requires_grad_(True)
+        H = features.clone().detach().requires_grad_(True).to(device)
         H_diff = float('inf')  # Difference between H before and after one iteration
         epoch = 0
 
@@ -92,22 +92,22 @@ def newton_method_tu(net, dataset_reduced, args):
             func_abs_sum = torch.sum(torch.sum(torch.abs(func), dim=1))
             if func_abs_sum < min_func_abs_sum_graph:
                 min_func_abs_sum_graph = func_abs_sum
-                H_min_func_abs_sum_graph = H.clone().detach()
+                H_min_func_abs_sum_graph = H.clone().detach().to(device)
                 min_epoch = epoch
 
             num_elements = features.shape[0] * features.shape[1]
             func_resize = func.view(num_elements, 1)
 
-            gradient = torch.zeros([num_elements, num_elements])
+            gradient = torch.zeros([num_elements, num_elements]).to(device)
 
             for index in np.arange(num_elements):
                 func_resize[index].backward(retain_graph=True)
-                gradient[index, :] = H.grad.view(1, num_elements).clone().detach()
+                gradient[index, :] = H.grad.view(1, num_elements).clone().detach().to(device)
                 H.grad.data.zero_()
 
-            H_resize = H.view(num_elements, 1).clone().detach()
+            H_resize = H.view(num_elements, 1).clone().detach().to(device)
             H_resize_new = H_resize - torch.mm(gradient.inverse(), func_resize)
-            H = H_resize_new.view(H.shape).clone().detach().requires_grad_(True)
+            H = H_resize_new.view(H.shape).clone().detach().requires_grad_(True).to(device)
 
             H_diff = torch.sum(torch.abs(H_resize - H_resize_new))
             if epoch % 1 == 0:
