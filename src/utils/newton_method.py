@@ -112,7 +112,7 @@ def newton_method_tu(net, dataset_reduced, args):
             H_diff = torch.sum(torch.abs(H_resize - H_resize_new))
             if epoch % 1 == 0:
                 dur.append(time.time() - t0)
-                print("Epoch {} | Current Function {:.4f} | Diff {:.4f} | Time(s) {:.4f}".format(epoch, func_abs_sum, H_diff, np.mean(dur)))
+                print("Graph ID {} | Epoch {} | Current Function {:.4f} | Diff {:.4f} | Time(s) {:.4f}".format(graph_id, epoch, func_abs_sum, H_diff, np.mean(dur)))
             epoch += 1
 
         if H_diff <= tol:
