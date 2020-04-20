@@ -107,6 +107,8 @@ def optimize_graph_tu(net, dataset_reduced, args):
 
         H_min_cost_func.append(H_min_cost_func_current_graph)
 
+    num_found = fixpoint_found_graph_ind[fixpoint_found_graph_ind == True].shape[0]
+    print("The number of graphs successfully finding fixpoint: {} ".format(num_found))
     return H_min_cost_func, fixpoint_found_graph_ind
 
 
