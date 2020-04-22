@@ -11,7 +11,7 @@ hidden_features: 32
 
 # training
 train_lr: 0.001
-train_max_epoch: 5
+train_max_epoch: 500
 train_patience: 10
 clip: 2.0
 
@@ -20,9 +20,9 @@ model_parameter_path:
 
 # optimization
 graph_optimization:
-  optimize_lr: 0.005
-  optimize_max_epoch: 3
-  optimize_tolerance: 1
+  optimize_lr: 0.01
+  optimize_max_epoch: 10000
+  optimize_tolerance: 0.001
 
 node_optimization:
   optimize_lr: 0.005
@@ -31,5 +31,5 @@ node_optimization:
 
 # newton's method
 newton_method:
-  max_epoch: 3
-  tolerance: 1
+  max_epoch: 500
+  tolerance: 0.001
