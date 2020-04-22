@@ -42,8 +42,6 @@ def main(args):
     elif args.dataset in 'aids, imdb-binary, reddit-binary':
         in_feats = statistics[0]
         out_feats = statistics[1]
-        if args.dataset == 'reddit-binary':
-            out_feats = out_feats - 1
 
     if not args.dataset in 'aids, imdb-binary, reddit-binary':
         slp_gcn = SLP_GCN_4node(in_feats, h_feats, out_feats).to(device)
