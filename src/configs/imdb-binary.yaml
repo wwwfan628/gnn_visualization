@@ -32,5 +32,5 @@ node_optimization:
 
 # newton's method
 newton_method:
-  max_epoch: 500
+  max_epoch: 300
   tolerance: 0.001
