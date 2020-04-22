@@ -55,9 +55,15 @@ def newton_method_cora_reddit_ppi(net, graph, features, args):
         H = H_resize_new.view(H.shape).clone().detach().requires_grad_(True).to(device)
 
         # H_diff = torch.sum(torch.abs(H_resize - H_resize_new))
-        # if epoch % 1 == 0:
+        if epoch % 50 == 0:    # save current best result
         #     dur.append(time.time() - t0)
         #     print("Epoch {} | Current Function {:.4f} | Diff {:.4f} | Time(s) {:.4f}".format(epoch, cost_func, H_diff, np.mean(dur)))
+            H_path = '../outputs/H_' + args.dataset + '_' + args.method + '.pkl'
+            H_file = os.path.join(os.getcwd(), H_path)
+            torch.save(H_min_cost_func, H_file)
+            cost_func_path = '../outputs/cost_func_' + args.dataset + '_' + args.method + '.pkl'
+            cost_func_file = os.path.join(os.getcwd(), cost_func_path)
+            torch.save(min_cost_func, cost_func_file)
 
         epoch += 1
 
@@ -142,6 +148,16 @@ def newton_method_tu(net, dataset_reduced, args):
 
         H_min_cost_func.append(H_min_cost_func_graph)
         min_cost_func[graph_id] = min_cost_func_graph
+        # save current result
+        H_path = '../outputs/H_' + args.dataset + '_' + args.method + '.pkl'
+        H_file = os.path.join(os.getcwd(), H_path)
+        torch.save(H_min_cost_func, H_file)
+        cost_func_path = '../outputs/cost_func_' + args.dataset + '_' + args.method + '.pkl'
+        cost_func_file = os.path.join(os.getcwd(), cost_func_path)
+        torch.save(min_cost_func, cost_func_file)
+        indices_path = '../outputs/indices_' + args.dataset + '_' + args.method + '.pkl'
+        indices_file = os.path.join(os.getcwd(), indices_path)
+        torch.save(fixpoint_found_graph_ind, indices_file)
 
     num_found = fixpoint_found_graph_ind[fixpoint_found_graph_ind == True].shape[0]
     print("The number of graphs successfully finding fixpoint: {} ".format(num_found))

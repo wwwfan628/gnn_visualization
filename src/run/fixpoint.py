@@ -115,13 +115,16 @@ def main(args):
             H, found_indices, min_cost_func = newton_method_tu(gcn, train_dataset_reduced, args)
 
 
-    H_file = 'H_' + args.dataset + '_' + args.method + '.pkl'
+    H_path = '../outputs/H_' + args.dataset + '_' + args.method + '.pkl'
+    H_file = os.path.join(os.getcwd(), H_path)
     torch.save(H, H_file)
-    if args.dataset in 'aids, imdb-binary, reddit-binary':
-        indices_file = 'indices_' + args.dataset + '_' + args.method + '.pkl'
-        torch.save(found_indices, indices_file)
-    cost_func_file = 'cost_func_' + args.dataset + '_' + args.method + '.pkl'
+    cost_func_path = '../outputs/cost_func_' + args.dataset + '_' + args.method + '.pkl'
+    cost_func_file = os.path.join(os.getcwd(), cost_func_path)
     torch.save(min_cost_func, cost_func_file)
+    if args.dataset in 'aids, imdb-binary, reddit-binary':
+        indices_path = '../outputs/indices_' + args.dataset + '_' + args.method + '.pkl'
+        indices_file = os.path.join(os.getcwd(), indices_path)
+        torch.save(found_indices, indices_file)
 
 
 if __name__ == '__main__':

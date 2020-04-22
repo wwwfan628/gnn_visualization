@@ -47,9 +47,15 @@ def optimize_graph_cora_reddit_ppi(net, graph, features, args):
         F_cost.backward()
         optimizer.step()
 
-        # if epoch % 100 == 0:
+        if epoch % 100 == 0:    # save current best results
         #     dur.append(time.time() - t0)
         #     print("Epoch {:07d} | Cost Function {:.4f} | Time(s) {:.4f}".format(epoch, F_cost, np.mean(dur)))
+            H_path = '../outputs/H_' + args.dataset + '_' + args.method + '.pkl'
+            H_file = os.path.join(os.getcwd(), H_path)
+            torch.save(H_min_cost_func, H_file)
+            cost_func_path = '../outputs/cost_func_' + args.dataset + '_' + args.method + '.pkl'
+            cost_func_file = os.path.join(os.getcwd(), cost_func_path)
+            torch.save(min_cost_func, cost_func_file)
 
         epoch += 1
 
@@ -77,8 +83,8 @@ def optimize_graph_tu(net, dataset_reduced, args):
     tol = config['graph_optimization']['optimize_tolerance']
 
     H_min_cost_func = []
-    fixpoint_found_graph_ind = np.empty(len(dataset_reduced))
-    min_cost_func = np.empty(len(dataset_reduced))
+    fixpoint_found_graph_ind = np.zeros(len(dataset_reduced))
+    min_cost_func = np.zeros(len(dataset_reduced))
 
     for graph_id, data in enumerate(dataset_reduced):  # loop over each graph
 
@@ -125,6 +131,17 @@ def optimize_graph_tu(net, dataset_reduced, args):
 
         H_min_cost_func.append(H_min_cost_func_graph)
         min_cost_func[graph_id] = min_cost_func_graph
+
+        # save current results
+        H_path = '../outputs/H_' + args.dataset + '_' + args.method + '.pkl'
+        H_file = os.path.join(os.getcwd(), H_path)
+        torch.save(H_min_cost_func, H_file)
+        cost_func_path = '../outputs/cost_func_' + args.dataset + '_' + args.method + '.pkl'
+        cost_func_file = os.path.join(os.getcwd(), cost_func_path)
+        torch.save(min_cost_func, cost_func_file)
+        indices_path = '../outputs/indices_' + args.dataset + '_' + args.method + '.pkl'
+        indices_file = os.path.join(os.getcwd(), indices_path)
+        torch.save(fixpoint_found_graph_ind, indices_file)
 
     num_found = fixpoint_found_graph_ind[fixpoint_found_graph_ind == True].shape[0]
     print("The number of graphs successfully finding fixpoint: {} ".format(num_found))
