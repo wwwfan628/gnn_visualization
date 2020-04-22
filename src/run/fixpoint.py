@@ -92,11 +92,11 @@ def main(args):
     if args.method == 'graph_optimization':
         print("********** OPTIMIZATION ON WHOLE GRAPH **********")
         if args.dataset in 'cora, reddit-self-loop':
-            H = optimize_graph_cora_reddit_ppi(gcn, g, features_reduced, args)
+            H, min_cost_func = optimize_graph_cora_reddit_ppi(gcn, g, features_reduced, args)
         elif args.dataset == 'ppi':
-            H = optimize_graph_cora_reddit_ppi(gcn, train_dataset.graph, features_reduced, args)
+            H, min_cost_func = optimize_graph_cora_reddit_ppi(gcn, train_dataset.graph, features_reduced, args)
         elif args.dataset in 'aids, imdb-binary, reddit-binary':
-            H, found_indices = optimize_graph_tu(gcn, train_dataset_reduced, args)
+            H, found_indices, min_cost_func = optimize_graph_tu(gcn, train_dataset_reduced, args)
     elif args.method == 'node_optimization':
         print("********** OPTIMIZATION ON EACH NODE **********")
         if args.dataset in 'cora, reddit-self-loop':
@@ -105,7 +105,7 @@ def main(args):
             H, found_indices = optimize_node_cora_reddit_ppi(gcn, train_dataset.graph, features_reduced, args)
         elif args.dataset in 'aids, imdb-binary, reddit-binary':
             H, found_indices = optimize_node_tu(gcn, train_dataset_reduced, args)
-    elif args.method == 'newton_method':  # TODO: Debug of Newton's method
+    elif args.method == 'newton_method':
         print("********** NEWTON'S METHOD **********")
         if args.dataset in 'cora, reddit-self-loop':
             H = newton_method_cora_reddit_ppi(gcn, g, features_reduced, args)
