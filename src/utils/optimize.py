@@ -100,7 +100,7 @@ def optimize_graph_tu(net, dataset_reduced, args):
             F_diff_abs = torch.abs(F_diff)
             F_cost = torch.sum(F_diff_abs)/num_elements  # cost function: sum of absolute value of each element
 
-            writer.add_scalar('cost function value of graph' + graph_id, F_cost, epoch)
+            writer.add_scalar('cost function value of graph' + str(graph_id), F_cost, epoch)
 
             if F_cost < min_cost_func_graph:
                 min_cost_func_graph = F_cost.item()
@@ -120,7 +120,7 @@ def optimize_graph_tu(net, dataset_reduced, args):
             print("Fixpoint for graph {} is found!".format(graph_id))
             fixpoint_found_graph_ind[graph_id] = True
         else:
-            print("Reached maximal number of epochs! Current min cost function value for graph {}: {:.4f}".format(graph_id, min_cost_func))
+            print("Reached maximal number of epochs! Current min cost function value for graph {}: {:.4f}".format(graph_id, min_cost_func_graph))
             fixpoint_found_graph_ind[graph_id] = False
 
         H_min_cost_func.append(H_min_cost_func_graph)

@@ -107,7 +107,7 @@ def newton_method_tu(net, dataset_reduced, args):
             func = net(graph, H) - H  # the matrix we want every element in it equals 0
             cost_func = torch.sum(torch.abs(func))/float(num_elements)
 
-            writer.add_scalar('cost function value of graph' + graph_id, cost_func, epoch)
+            writer.add_scalar('cost function value of graph' + str(graph_id), cost_func, epoch)
 
             if cost_func < min_cost_func_graph:
                 min_cost_func_graph = cost_func
