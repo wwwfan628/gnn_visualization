@@ -117,6 +117,11 @@ def main(args):
 
     H_file = 'H_' + args.dataset + '_' + args.method + '.pkl'
     torch.save(H, H_file)
+    if args.dataset in 'aids, imdb-binary, reddit-binary':
+        indices_file = 'indices_' + args.dataset + '_' + args.method + '.pkl'
+        torch.save(found_indices, indices_file)
+    cost_func_file = 'cost_func_' + args.dataset + '_' + args.method + '.pkl'
+    torch.save(min_cost_func, cost_func_file)
 
 
 if __name__ == '__main__':
