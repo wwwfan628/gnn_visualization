@@ -108,11 +108,11 @@ def main(args):
     elif args.method == 'newton_method':
         print("********** NEWTON'S METHOD **********")
         if args.dataset in 'cora, reddit-self-loop':
-            H = newton_method_cora_reddit_ppi(gcn, g, features_reduced, args)
+            H, min_cost_func = newton_method_cora_reddit_ppi(gcn, g, features_reduced, args)
         elif args.dataset == 'ppi':
-            H = newton_method_cora_reddit_ppi(gcn, train_dataset.graph, features_reduced, args)
+            H, min_cost_func = newton_method_cora_reddit_ppi(gcn, train_dataset.graph, features_reduced, args)
         elif args.dataset in 'aids, imdb-binary, reddit-binary':
-            H, found_indices = newton_method_tu(gcn, train_dataset_reduced, args)
+            H, found_indices, min_cost_func = newton_method_tu(gcn, train_dataset_reduced, args)
 
 
     H_file = 'H_' + args.dataset + '_' + args.method + '.pkl'

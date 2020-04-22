@@ -57,6 +57,9 @@ def optimize_graph_cora_reddit_ppi(net, graph, features, args):
         print("Fixpoint is found!")
     else:
         print("Reached maximal number of epochs! Current min cost function value: {:.4f}".format(min_cost_func))
+
+    writer.close()
+
     return H_min_cost_func, min_cost_func
 
 
@@ -125,6 +128,9 @@ def optimize_graph_tu(net, dataset_reduced, args):
 
     num_found = fixpoint_found_graph_ind[fixpoint_found_graph_ind == True].shape[0]
     print("The number of graphs successfully finding fixpoint: {} ".format(num_found))
+
+    writer.close()
+
     return H_min_cost_func, fixpoint_found_graph_ind, min_cost_func
 
 
