@@ -12,6 +12,7 @@ import os
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+
 def load_citation(args):
     data = load_data(args)
     features = torch.FloatTensor(data.features).to(device)
@@ -81,7 +82,7 @@ def load_tu_without_node_feat(dataset_name, train_ratio, validate_ratio, batch_s
         data[0].ndata['feat'] = data[0].in_degrees().view(-1, 1).float()
 
     statistics = dataset.statistics()
-    print("Use degere of node to replace default constant node features, current feature dimension: {}.".format(statistics[0]))
+    print("Use degree of node to replace default constant node features, current feature dimension: {}.".format(statistics[0]))
 
     train_size = int(train_ratio * len(dataset))
     valid_size = int(validate_ratio * len(dataset))
@@ -94,6 +95,13 @@ def load_tu_without_node_feat(dataset_name, train_ratio, validate_ratio, batch_s
     return statistics, train_dataset, train_dataloader, valid_dataloader
 
 def load_dataset(args):
+
+    if args.fix_random:
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed(0)
+        else:
+            torch.manual_seed(0)
+        np.random.seed(0)
 
     if args.dataset in 'cora, citeseer, pubmed':
         g, features, labels, train_mask, test_mask = load_citation(args)
@@ -113,7 +121,7 @@ def load_dataset(args):
         train_dataset, train_dataloader, valid_dataloader = load_ppi(batch_size)
         return train_dataset, train_dataloader, valid_dataloader
 
-    elif args.dataset in 'aids, imdb-binary, reddit-binary':
+    elif args.dataset in 'aids, imdb-binary, reddit-binary, proteins, mutag, enzymes, imdb-multi':
 
         path = '../configs/' + args.dataset + '.yaml'
         config_file = os.path.join(os.getcwd(), path)
@@ -124,7 +132,7 @@ def load_dataset(args):
         validate_ratio = config['validate_ratio']
         batch_size = config['batch_size']
 
-        if args.dataset == 'aids':
+        if args.dataset in 'aids, proteins, mutag, enzymes':
             statistics, train_dataset, train_dataloader, valid_dataloader = load_tu_with_node_feat(dataset_name, train_ratio, validate_ratio, batch_size)
         else:
             statistics, train_dataset, train_dataloader, valid_dataloader = load_tu_without_node_feat(dataset_name,train_ratio, validate_ratio, batch_size)

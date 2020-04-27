@@ -22,7 +22,7 @@ def main(args):
         g, features, labels, train_mask, test_mask = load_dataset(args)
     elif args.dataset == 'ppi':
         train_dataset, train_dataloader, valid_dataloader = load_dataset(args)
-    elif args.dataset in 'aids, imdb-binary, reddit-binary':
+    elif args.dataset in 'aids, imdb-binary, reddit-binary, proteins, mutag, enzymes, imdb-multi':
         statistics, train_dataset, train_dataloader, valid_dataloader = load_dataset(args)
 
     # build network
@@ -39,11 +39,11 @@ def main(args):
     elif args.dataset == 'ppi':
         in_feats = train_dataset.features.shape[1]
         out_feats = train_dataset.labels.shape[1]
-    elif args.dataset in 'aids, imdb-binary, reddit-binary':
+    elif args.dataset in 'aids, imdb-binary, reddit-binary, proteins, mutag, enzymes, imdb-multi':
         in_feats = statistics[0]
         out_feats = statistics[1]
 
-    if not args.dataset in 'aids, imdb-binary, reddit-binary':
+    if not args.dataset in 'aids, imdb-binary, reddit-binary, proteins, mutag, enzymes, imdb-multi':
         slp_gcn = SLP_GCN_4node(in_feats, h_feats, out_feats).to(device)
     else:
         slp_gcn = SLP_GCN_4graph(in_feats, h_feats, out_feats).to(device)
@@ -54,7 +54,7 @@ def main(args):
             train_cora_reddit(slp_gcn, g, features, labels, train_mask, test_mask, args)
         elif args.dataset == 'ppi':
             train_ppi(slp_gcn, train_dataloader, valid_dataloader, args)
-        elif args.dataset in 'aids, imdb-binary, reddit-binary':
+        elif args.dataset in 'aids, imdb-binary, reddit-binary, proteins, mutag, enzymes, imdb-multi':
             train_tu(slp_gcn, train_dataloader, valid_dataloader, args)
 
         model_file = 'slp_gcn_parameters_' + args.dataset + '.pkl'
@@ -76,7 +76,7 @@ def main(args):
         elif args.dataset == 'ppi':
             features = torch.from_numpy(train_dataset.features).to(device)
             features_reduced = slp(features.float())
-        elif args.dataset in 'aids, imdb-binary, reddit-binary':
+        elif args.dataset in 'aids, imdb-binary, reddit-binary, proteins, mutag, enzymes, imdb-multi':
             train_dataset_reduced = train_dataset
             for data in train_dataset_reduced:
                 data[0].ndata['feat'] = slp(data[0].ndata['feat'].float().to(device))
@@ -93,7 +93,7 @@ def main(args):
             H, min_cost_func = optimize_graph_cora_reddit_ppi(gcn, g, features_reduced, args)
         elif args.dataset == 'ppi':
             H, min_cost_func = optimize_graph_cora_reddit_ppi(gcn, train_dataset.graph, features_reduced, args)
-        elif args.dataset in 'aids, imdb-binary, reddit-binary':
+        elif args.dataset in 'aids, imdb-binary, reddit-binary, proteins, mutag, enzymes, imdb-multi':
             H, found_indices, min_cost_func = optimize_graph_tu(gcn, train_dataset_reduced, args)
     elif args.method == 'node_optimization':
         print("********** OPTIMIZATION ON EACH NODE **********")
@@ -101,7 +101,7 @@ def main(args):
             H, found_indices = optimize_node_cora_reddit_ppi(gcn, g, features_reduced, args)
         elif args.dataset == 'ppi':
             H, found_indices = optimize_node_cora_reddit_ppi(gcn, train_dataset.graph, features_reduced, args)
-        elif args.dataset in 'aids, imdb-binary, reddit-binary':
+        elif args.dataset in 'aids, imdb-binary, reddit-binary, proteins, mutag, enzymes, imdb-multi':
             H, found_indices = optimize_node_tu(gcn, train_dataset_reduced, args)
     elif args.method == 'newton_method':
         print("********** NEWTON'S METHOD **********")
@@ -109,7 +109,7 @@ def main(args):
             H, min_cost_func = newton_method_cora_reddit_ppi(gcn, g, features_reduced, args)
         elif args.dataset == 'ppi':
             H, min_cost_func = newton_method_cora_reddit_ppi(gcn, train_dataset.graph, features_reduced, args)
-        elif args.dataset in 'aids, imdb-binary, reddit-binary':
+        elif args.dataset in 'aids, imdb-binary, reddit-binary, proteins, mutag, enzymes, imdb-multi':
             H, found_indices, min_cost_func = newton_method_tu(gcn, train_dataset_reduced, args)
 
 
@@ -119,7 +119,7 @@ def main(args):
     cost_func_path = '../outputs/cost_func_' + args.dataset + '_' + args.method + '.pkl'
     cost_func_file = os.path.join(os.getcwd(), cost_func_path)
     torch.save(min_cost_func, cost_func_file)
-    if args.dataset in 'aids, imdb-binary, reddit-binary':
+    if args.dataset in 'aids, imdb-binary, reddit-binary, proteins, mutag, enzymes, imdb-multi':
         indices_path = '../outputs/indices_' + args.dataset + '_' + args.method + '.pkl'
         indices_file = os.path.join(os.getcwd(), indices_path)
         torch.save(found_indices, indices_file)
@@ -133,7 +133,7 @@ if __name__ == '__main__':
     parser.add_argument('dataset', help='choose dataset from: cora, reddit-self-loop, ppi, aids, reddit-binary and imdb-binary')
     parser.add_argument('method', help='choose method from: graph_optimization, node_optimization and newton_method')
     parser.add_argument('--train', action='store_true', help='set true if model needs to be trained, i.e. no checkpoint available')
-
+    parser.add_argument('--fix_random', action='store_true', help='set true only when comparing fixpoints from different methods')
     args = parser.parse_args()
 
     print(args)
