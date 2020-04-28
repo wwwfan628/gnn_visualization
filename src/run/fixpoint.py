@@ -12,9 +12,20 @@ import argparse
 import torch
 import yaml
 import os
+import numpy as np
+import random
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print("RUNNING ON: {}".format(device))
+
+def fix_random_seed(seed=0):
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+    else:
+        torch.manual_seed(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
 
 def main(args):
     # load dataset
@@ -145,6 +156,10 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     print(args)
+
+    if args.fix_random:  # fix random seed if True
+        fix_random_seed()
+
     main(args)
     print("Finish!")
 

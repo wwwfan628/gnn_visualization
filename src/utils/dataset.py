@@ -96,13 +96,6 @@ def load_tu_without_node_feat(dataset_name, train_ratio, validate_ratio, batch_s
 
 def load_dataset(args):
 
-    if args.fix_random:
-        if torch.cuda.is_available():
-            torch.cuda.manual_seed(0)
-        else:
-            torch.manual_seed(0)
-        np.random.seed(0)
-
     if args.dataset in 'cora, citeseer, pubmed':
         g, features, labels, train_mask, test_mask = load_citation(args)
         return g, features, labels, train_mask, test_mask
