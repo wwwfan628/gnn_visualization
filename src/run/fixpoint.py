@@ -3,6 +3,7 @@ from src.utils.train_model import train_cora_reddit, train_ppi, train_tu
 from src.utils.train_model import load_parameters
 from src.utils.optimize import optimize_graph_cora_reddit_ppi, optimize_graph_tu, optimize_node_cora_reddit_ppi, optimize_node_tu
 from src.utils.newton_method import newton_method_cora_reddit_ppi, newton_method_tu
+from src.utils.broyden_method import broyden_method_cora_reddit_ppi, broyden_method_tu
 from src.models.slp_gcn import SLP_GCN_4node, SLP_GCN_4graph
 from src.models.slp import SLP
 from src.models.gcn import GCN
@@ -111,7 +112,14 @@ def main(args):
             H, min_cost_func = newton_method_cora_reddit_ppi(gcn, train_dataset.graph, features_reduced, args)
         elif args.dataset in 'aids, imdb-binary, reddit-binary, proteins, mutag, enzymes, imdb-multi':
             H, found_indices, min_cost_func = newton_method_tu(gcn, train_dataset_reduced, args)
-
+    elif 'broyden' in args.method:
+        print("********** BROYDEN'S METHOD **********")
+        if args.dataset in 'cora, reddit-self-loop':
+            H, min_cost_func = broyden_method_cora_reddit_ppi(gcn, g, features_reduced, args)
+        elif args.dataset == 'ppi':
+            H, min_cost_func = broyden_method_cora_reddit_ppi(gcn, train_dataset.graph, features_reduced, args)
+        elif args.dataset in 'aids, imdb-binary, reddit-binary, proteins, mutag, enzymes, imdb-multi':
+            H, found_indices, min_cost_func = broyden_method_tu(gcn, train_dataset_reduced, args)
 
     H_path = '../outputs/H_' + args.dataset + '_' + args.method + '.pkl'
     H_file = os.path.join(os.getcwd(), H_path)

@@ -33,3 +33,8 @@ node_optimization:
 newton_method:
   max_epoch: 300
   tolerance: 0.001
+
+# Broyden's method
+broyden_method:
+  max_epoch: 3
+  tolerance: 1
