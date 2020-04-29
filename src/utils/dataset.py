@@ -1,5 +1,5 @@
 from dgl.data import load_data
-from dgl.data import LegacyPPIDataset
+from dgl.data import PPIDataset
 from dgl.data import LegacyTUDataset
 import dgl
 from dgl import DGLGraph
@@ -36,15 +36,14 @@ def load_reddit(args):
     return g, features, labels, train_mask, test_mask
 
 def collate_ppi(sample):
-    graphs, feats, labels =map(list, zip(*sample))
+    graphs, labels =map(list, zip(*sample))
     graph = dgl.batch(graphs)
-    feats = torch.from_numpy(np.concatenate(feats)).to(device)
     labels = torch.from_numpy(np.concatenate(labels)).to(device)
-    return graph, feats, labels
+    return graph, labels
 
 def load_ppi(batch_size):
-    train_dataset = LegacyPPIDataset(mode='train')
-    valid_dataset = LegacyPPIDataset(mode='valid')
+    train_dataset = PPIDataset(mode='train')
+    valid_dataset = PPIDataset(mode='valid')
 
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, collate_fn=collate_ppi)
     valid_dataloader = DataLoader(valid_dataset, batch_size=batch_size, collate_fn=collate_ppi)

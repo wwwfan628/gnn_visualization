@@ -73,10 +73,10 @@ def train_cora_reddit(net, graph, features, labels, train_mask, test_mask, args)
 def evaluate_ppi(model, valid_dataloader, loss_fcn):
     score_list = []
     val_loss_list = []
-    for batch, (subgraph, feats, labels) in enumerate(valid_dataloader):
+    for batch, (subgraph, labels) in enumerate(valid_dataloader):
         model.eval()
         with torch.no_grad():
-            output = model(subgraph, feats.float().to(device))
+            output = model(subgraph, subgraph.ndata['feat'].float().to(device))
             loss_data = loss_fcn(output, labels.float().to(device)).item()
             predict = np.where(output.data.cpu().numpy() >= 0.5, 1, 0)
             score = f1_score(labels.data.cpu().numpy(), predict, average='micro')
@@ -110,8 +110,8 @@ def train_ppi(net, train_dataloader, valid_dataloader, args):
 
         net.train()
         loss_list = []
-        for batch, (subgraph, feats, labels) in enumerate(train_dataloader):
-            logits = net(subgraph, feats.float().to(device))
+        for batch, (subgraph, labels) in enumerate(train_dataloader):
+            logits = net(subgraph, subgraph.ndata['feat'].float().to(device))
             loss = loss_fcn(logits, labels.float().to(device))
             optimizer.zero_grad()
             loss.backward()
