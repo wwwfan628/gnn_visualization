@@ -1,6 +1,6 @@
 from dgl.data import load_data
 from dgl.data import PPIDataset
-from dgl.data import LegacyTUDataset
+from dgl.data import TUDataset
 import dgl
 from dgl import DGLGraph
 import numpy as np
@@ -55,33 +55,31 @@ def collate_tu(batch):
     for graph in graphs:
         for (key, value) in graph.ndata.items():
             graph.ndata[key] = torch.FloatTensor(value.float()).to(device)
+        for (key, value) in graph.edata.items():
+            graph.edata[key] = torch.FloatTensor(value.float()).to(device)
     batched_graphs = dgl.batch(graphs)
     # cast to PyTorch tensor
     batched_labels = torch.LongTensor(np.array(labels)).to(device)
     return batched_graphs, batched_labels
 
-def load_tu_with_node_feat(dataset_name, train_ratio, validate_ratio, batch_size):
-    dataset = LegacyTUDataset(name=dataset_name)
-    statistics = dataset.statistics()
-    train_size = int(train_ratio * len(dataset))
-    valid_size = int(validate_ratio * len(dataset))
-    test_size = int(len(dataset) - train_size - valid_size)
 
-    train_dataset, valid_dataset, test_dataset = torch.utils.data.random_split(dataset, (train_size, valid_size, test_size))
+def load_tu(dataset_name, train_ratio, validate_ratio, batch_size):
+    dataset = TUDataset(name=dataset_name)
 
-    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_tu)
-    valid_dataloader = DataLoader(valid_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_tu)
-    return statistics, train_dataset, train_dataloader, valid_dataloader
-
-def load_tu_without_node_feat(dataset_name, train_ratio, validate_ratio, batch_size):
-    dataset = LegacyTUDataset(name=dataset_name)
-
-    # use degere of node to replace default constant node features
-    for graph_id, data in enumerate(dataset):
-        data[0].ndata['feat'] = data[0].in_degrees().view(-1, 1).float()
+    # Use provided node feature by default. If no feature provided, use node label instead.
+    # If neither labels provided, use degree for node feature.
+    for g in dataset.graph_lists:
+        if 'node_attr' in g.ndata.keys():
+            g.ndata['feat'] = g.ndata['node_attr']
+            print("Use default node feature")
+        elif 'node_labels' in g.ndata.keys():
+            g.ndata['feat'] = g.ndata['node_labels']
+            print("Use node labels as node feature")
+        else:
+            g.ndata['feat'] = g.in_degrees().view(-1, 1).float()
+            print("Use degree of node as node feature")
 
     statistics = dataset.statistics()
-    print("Use degree of node to replace default constant node features, current feature dimension: {}.".format(statistics[0]))
 
     train_size = int(train_ratio * len(dataset))
     valid_size = int(validate_ratio * len(dataset))
@@ -124,10 +122,8 @@ def load_dataset(args):
         validate_ratio = config['validate_ratio']
         batch_size = config['batch_size']
 
-        if args.dataset in 'aids, proteins, mutag, enzymes':
-            statistics, train_dataset, train_dataloader, valid_dataloader = load_tu_with_node_feat(dataset_name, train_ratio, validate_ratio, batch_size)
-        else:
-            statistics, train_dataset, train_dataloader, valid_dataloader = load_tu_without_node_feat(dataset_name,train_ratio, validate_ratio, batch_size)
+        statistics, train_dataset, train_dataloader, valid_dataloader = load_tu(dataset_name, train_ratio, validate_ratio, batch_size)
+
         return statistics, train_dataset, train_dataloader, valid_dataloader
 
 
