@@ -59,7 +59,7 @@ def collate_tu(batch):
             graph.edata[key] = torch.FloatTensor(value.float()).to(device)
     batched_graphs = dgl.batch(graphs)
     # cast to PyTorch tensor
-    batched_labels = torch.LongTensor(np.array(labels)).to(device)
+    batched_labels = torch.LongTensor(np.array(labels).flatten()).to(device)
     return batched_graphs, batched_labels
 
 
@@ -71,13 +71,17 @@ def load_tu(dataset_name, train_ratio, validate_ratio, batch_size):
     for g in dataset.graph_lists:
         if 'node_attr' in g.ndata.keys():
             g.ndata['feat'] = g.ndata['node_attr']
-            print("Use default node feature")
         elif 'node_labels' in g.ndata.keys():
             g.ndata['feat'] = g.ndata['node_labels']
-            print("Use node labels as node feature")
         else:
             g.ndata['feat'] = g.in_degrees().view(-1, 1).float()
-            print("Use degree of node as node feature")
+
+    if 'node_attr' in g.ndata.keys():
+        print("Use default node feature!")
+    elif 'node_labels' in g.ndata.keys():
+        print("Use node labels as node features!")
+    else:
+        print("Use node degree as node features!")
 
     statistics = dataset.statistics()
 

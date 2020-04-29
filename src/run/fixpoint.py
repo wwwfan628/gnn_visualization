@@ -58,7 +58,7 @@ def main(args):
         out_feats = train_dataset.labels.shape[1]
     elif 'tu' in args.dataset:
         in_feats = statistics[0]
-        out_feats = statistics[1]
+        out_feats = statistics[1].item()
 
     if 'tu' not in args.dataset:
         slp_gcn = SLP_GCN_4node(in_feats, h_feats, out_feats).to(device)

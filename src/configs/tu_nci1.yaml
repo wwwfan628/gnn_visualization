@@ -1,7 +1,7 @@
-# Configuration file for dataset TU:IMDB-MULTI
+# Configuration file for dataset TU:NCI1
 
 # load data
-dataset_name: 'IMDB-MULTI'
+dataset_name: 'NCI1'
 train_ratio: 0.7
 validate_ratio: 0.2
 batch_size: 20
@@ -11,7 +11,7 @@ hidden_features: 16
 
 # training
 train_lr: 0.001
-train_max_epoch: 5
+train_max_epoch: 500
 train_patience: 10
 clip: 2.0
 
@@ -21,7 +21,7 @@ model_parameter_path:
 # optimization
 graph_optimization:
   optimize_lr: 0.01
-  optimize_max_epoch: 3
+  optimize_max_epoch: 100000
   optimize_tolerance: 0.001
 
 node_optimization:
@@ -31,10 +31,10 @@ node_optimization:
 
 # Newton's method
 newton_method:
-  max_epoch: 3
+  max_epoch: 500
   tolerance: 0.001
 
 # Broyden's method
 broyden_method:
-  max_epoch: 3
-  tolerance: 1
+  max_epoch: 500
+  tolerance: 0.001

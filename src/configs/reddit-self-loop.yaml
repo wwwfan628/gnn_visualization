@@ -15,7 +15,7 @@ model_parameter_path:
 graph_optimization:
   optimize_lr: 0.005
   optimize_max_epoch: 1000000
-  optimize_tolerance: 1
+  optimize_tolerance: 0.001
 
 node_optimization:
   optimize_lr: 0.005
@@ -25,9 +25,9 @@ node_optimization:
 # newton's method
 newton_method:
   max_epoch: 500
-  tolerance: 1
+  tolerance: 0.001
 
 # Broyden's method
 broyden_method:
-  max_epoch: 3
-  tolerance: 1
+  max_epoch: 500
+  tolerance: 0.001

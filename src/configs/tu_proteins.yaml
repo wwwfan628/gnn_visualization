@@ -1,13 +1,13 @@
-# Configuration file for dataset TU:REDDIT-BINARY
+# Configuration file for dataset TU:PROTEINS_full
 
 # load data
-dataset_name: 'REDDIT-BINARY'
+dataset_name: 'PROTEINS_full'
 train_ratio: 0.7
 validate_ratio: 0.2
 batch_size: 20
 
 # model
-hidden_features: 32
+hidden_features: 16
 
 # training
 train_lr: 0.001
@@ -21,7 +21,7 @@ model_parameter_path:
 # optimization
 graph_optimization:
   optimize_lr: 0.01
-  optimize_max_epoch: 10000
+  optimize_max_epoch: 100000
   optimize_tolerance: 0.001
 
 node_optimization:
@@ -31,10 +31,10 @@ node_optimization:
 
 # newton's method
 newton_method:
-  max_epoch: 100
+  max_epoch: 500
   tolerance: 0.001
 
 # Broyden's method
 broyden_method:
-  max_epoch: 3
-  tolerance: 1
+  max_epoch: 500
+  tolerance: 0.001
