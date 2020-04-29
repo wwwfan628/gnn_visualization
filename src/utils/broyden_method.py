@@ -8,7 +8,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 def broyden_method_cora_reddit_ppi(net, graph, features, args):
 
-    writer = SummaryWriter(logdir='./logs/'+args.dataset+'_'+args.method)
+    writer = SummaryWriter(logdir='../logs/'+args.dataset+'_'+args.method)
 
     path = '../configs/' + args.dataset + '.yaml'
     config_file = os.path.join(os.getcwd(), path)
@@ -91,7 +91,7 @@ def broyden_method_cora_reddit_ppi(net, graph, features, args):
 
 def broyden_method_tu(net, dataset_reduced, args):
 
-    writer = SummaryWriter(logdir='./logs/'+args.dataset+'_'+args.method)
+    writer = SummaryWriter(logdir='../logs/'+args.dataset+'_'+args.method)
 
     path = '../configs/' + args.dataset + '.yaml'
     config_file = os.path.join(os.getcwd(), path)

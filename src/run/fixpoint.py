@@ -33,6 +33,14 @@ def main(args):
     if args.fix_random:
         fix_random_seed()
 
+    # check if 'outputs' and 'checkpoints' directory exist, if not create
+    outputs_dir = os.path.join(os.getcwd(), '../outputs')
+    checkpoints_dir = os.path.join(os.getcwd(), '../checkpoints')
+    if not os.path.exists(outputs_dir):
+        os.makedirs(outputs_dir)
+    if not os.path.exists(checkpoints_dir):
+        os.makedirs(checkpoints_dir)
+
     # load dataset
     print("********** LOAD DATASET **********")
     if args.dataset in 'cora, reddit-self-loop':
@@ -74,17 +82,19 @@ def main(args):
         elif 'tu' in args.dataset:
             train_tu(slp_gcn, train_dataloader, valid_dataloader, args)
 
-        model_file = 'slp_gcn_parameters_' + args.dataset + '.pkl'
-        torch.save(slp_gcn.state_dict(), model_file)
+        checkpoint_path = '../checkpoints/slp_gcn_' + args.dataset + '.pkl'
+        checkpoint_file = os.path.join(os.getcwd(), checkpoint_path)
+        torch.save(slp_gcn.state_dict(), checkpoint_file)
+
     else:
-        path = 'slp_gcn_parameters_' + args.dataset + '.pkl'
-        model_file = os.path.join(os.getcwd(), path)
-        slp_gcn.load_state_dict(torch.load(model_file, map_location=device))
+        checkpoint_path = '../checkpoints/slp_gcn_' + args.dataset + '.pkl'
+        checkpoint_file = os.path.join(os.getcwd(), checkpoint_path)
+        slp_gcn.load_state_dict(torch.load(checkpoint_file, map_location=device))
 
     # reduce/increase dimension of nodes'features
     print("********** PREPROCESS FEATURES **********")
     slp = SLP(in_feats, h_feats).to(device)
-    model_dict = load_parameters(model_file, slp)
+    model_dict = load_parameters(checkpoint_file, slp)
     slp.load_state_dict(model_dict)
     slp.eval()
     with torch.no_grad():
@@ -100,7 +110,7 @@ def main(args):
 
     # GCN
     gcn = GCN(h_feats).to(device)
-    model_dict = load_parameters(model_file, gcn)
+    model_dict = load_parameters(checkpoint_file, gcn)
     gcn.load_state_dict(model_dict)
 
     # Find fixpoint
