@@ -10,7 +10,7 @@ where `cora` is the dataset name, which may be changed to `reddit-self-loop`, `p
 ```
 python fixpoint.py tu_aids broyden_method --train --fix_random
 ```
-where `aids` is the dataset name, supported TUDatasets are listed in the following table. Prefix `tu_` should be added. `--fix_random` should be set as `True` if the result will be compared in `notebooks/compare_fixpoint.ipynb`
+where `aids` is the TUDataset name, supported TUDatasets are listed in the following table. Prefix `tu_` should be added. `--fix_random` should be set as `True` if the result will be compared in `notebooks/compare_fixpoint.ipynb`
 
 Supported TUDatasets:
 <table style="width:100%">
