@@ -1,4 +1,4 @@
-# Configuration file for dataset TU:AIDS
+# Configuration file for dataset TU:IMDB-BINARY
 
 # load data
 
@@ -6,6 +6,8 @@ dataset_name: 'IMDB-BINARY'
 train_ratio: 0.7
 validate_ratio: 0.2
 batch_size: 20
+
+dataset_len: 1000
 
 # model
 hidden_features: 16
