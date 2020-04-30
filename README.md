@@ -79,5 +79,4 @@ Supported TUDatasets:
   </tr>
 </table>
 
-##### To compare different fixpoint finding methods, head over to `notebooks/compare_cost_func.ipynb` and `notebooks/compare_fixpoint.ipynb`. 
-To compare fixpoints for TUDatasets obtained from different methods using `notebooks/compare_fixpoint.ipynb`, `--fix_random` must be set `True`. 
+- To compare different fixpoint finding methods, head over to `notebooks/compare_cost_func.ipynb` and `notebooks/compare_fixpoint.ipynb`. To run `notebooks/compare_fixpoint.ipynb`, `--fix_random` must be set `True`. 
