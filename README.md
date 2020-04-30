@@ -16,6 +16,7 @@ Supported TUDatasets:
 <table style="width:100%">
   <tr>
     <th></th>
+    <th>Type</th>
     <th>Num. of Graphs</th>
     <th>Num. of Classes</th>
     <th>Avg. Number of Nodes</th>
@@ -23,6 +24,7 @@ Supported TUDatasets:
   </tr>
   <tr>
     <td>AIDS</td>
+    <td>Disease</td>
     <td>2000</td>
     <td>2</td>
     <td>15.69</td>
@@ -30,6 +32,7 @@ Supported TUDatasets:
   </tr>
   <tr>
     <td>ENZYMES</td>
+    <td>Molecular</td>
     <td>600</td>
     <td>6</td>
     <td>32.63</td>
@@ -37,6 +40,7 @@ Supported TUDatasets:
   </tr>
   <tr>
     <td>IMDB-BINARY</td>
+    <td>Social</td>
     <td>1000</td>
     <td>2</td>
     <td>19.77</td>
@@ -44,6 +48,7 @@ Supported TUDatasets:
   </tr>
   <tr>
     <td>IMDB-MULTI</td>
+    <td>Social</td>
     <td>1500</td>
     <td>3</td>
     <td>13.00</td>
@@ -51,6 +56,7 @@ Supported TUDatasets:
   </tr>
   <tr>
     <td>MSRC_9</td>
+    <td>Vision</td>
     <td>211</td>
     <td>8</td>
     <td>40.58</td>
@@ -58,6 +64,7 @@ Supported TUDatasets:
   </tr>
   <tr>
     <td>MUTAG</td>
+    <td>Molecular</td>
     <td>188</td>
     <td>2</td>
     <td>17.93</td>
@@ -65,6 +72,7 @@ Supported TUDatasets:
   </tr>
   <tr>
     <td>NCI1</td>
+    <td>Molecular</td>
     <td>4110</td>
     <td>2</td>
     <td>29.87</td>
@@ -72,6 +80,7 @@ Supported TUDatasets:
   </tr>
   <tr>
     <td>PROTEINS</td>
+    <td>Molecular</td>
     <td>1113</td>
     <td>2</td>
     <td>39.06</td>
