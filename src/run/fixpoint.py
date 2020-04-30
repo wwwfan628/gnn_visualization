@@ -1,5 +1,5 @@
 from src.utils.dataset import load_dataset
-from src.utils.train_model import train_cora_reddit, train_ppi, train_tu
+from src.utils.train_model import train_cora_reddit, train_ppi, train_tu, evaluate_tu, evaluate_ppi, evaluate_cora_reddit
 from src.utils.train_model import load_parameters
 from src.utils.optimize import optimize_graph_cora_reddit_ppi, optimize_graph_tu, optimize_node_cora_reddit_ppi, optimize_node_tu
 from src.utils.newton_method import newton_method_cora_reddit_ppi, newton_method_tu
@@ -7,6 +7,7 @@ from src.utils.broyden_method import broyden_method_cora_reddit_ppi, broyden_met
 from src.models.slp_gcn import SLP_GCN_4node, SLP_GCN_4graph
 from src.models.slp import SLP
 from src.models.gcn import GCN
+from src.models.last_layer import Last_Layer_4graph, Last_Layer_4node
 
 import argparse
 import torch
@@ -14,6 +15,7 @@ import yaml
 import os
 import numpy as np
 import random
+import torch.nn as nn
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print("RUNNING ON: {}".format(device))
@@ -153,11 +155,38 @@ def main(args):
     cost_func_path = '../outputs/cost_func_' + args.dataset + '_' + args.method + '.pkl'
     cost_func_file = os.path.join(os.getcwd(), cost_func_path)
     torch.save(min_cost_func, cost_func_file)
-    if args.dataset in 'aids, imdb-binary, reddit-binary, proteins, mutag, enzymes, imdb-multi':
+    if 'tu' in args.dataset:
         indices_path = '../outputs/indices_' + args.dataset + '_' + args.method + '.pkl'
         indices_file = os.path.join(os.getcwd(), indices_path)
         torch.save(found_indices, indices_file)
 
+    # Test fixpoint's performance in classification
+    if 'tu' in args.dataset:
+        last_layer = Last_Layer_4graph(h_feats, out_feats)
+        model_dict = load_parameters(checkpoint_file, last_layer)
+        last_layer.load_state_dict(model_dict)
+    else:
+        last_layer = Last_Layer_4node(h_feats, out_feats)
+        model_dict = load_parameters(checkpoint_file, last_layer)
+        last_layer.load_state_dict(model_dict)
+
+    if 'tu' in args.dataset:
+        for graph_idx, (graph, graph_label) in enumerate(train_dataset):
+            graph.ndata['feat'] = H[graph_idx]
+        loss_fcn = nn.CrossEntropyLoss()
+        acc, mean_loss = evaluate_tu(train_dataloader,last_layer,loss_fcn,config['batch_size'])
+        print("Accuracy of Classification using fixpoint: {} !".format(acc))
+        print("Mean value of loss function: {} !".format(mean_loss))
+    elif args.dataset in 'cora, reddit-self-loop':
+        acc, loss = evaluate_cora_reddit(last_layer, g, H, labels, train_mask)
+        print("Accuracy of Classification using fixpoint: {} !".format(acc))
+        print("Value of loss function: {} !".format(loss))
+    elif args.dataset == 'ppi':
+        train_dataset.features = H
+        loss_fcn = nn.BCEWithLogitsLoss()
+        mean_score, mean_loss = evaluate_ppi(last_layer, train_dataloader, loss_fcn)
+        print("Mean value of F1 Score for Classification using fixpoint: {} !".format(mean_score))
+        print("Mean value of loss function: {} !".format(mean_loss))
 
 if __name__ == '__main__':
 
