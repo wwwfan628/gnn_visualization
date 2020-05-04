@@ -48,9 +48,9 @@ def main(args):
     if args.dataset in 'cora, reddit-self-loop':
         g, features, labels, train_mask, test_mask = load_dataset(args)
     elif args.dataset == 'ppi':
-        train_dataset, train_dataloader, valid_dataloader = load_dataset(args)
+        train_dataset, valid_dataset, train_dataloader, valid_dataloader = load_dataset(args)
     elif 'tu' in args.dataset:
-        statistics, train_dataset, train_dataloader, valid_dataloader = load_dataset(args)
+        statistics, train_dataset, valid_dataset, train_dataloader, valid_dataloader = load_dataset(args)
 
     # build network
     print("********** BUILD NETWORK **********")
@@ -93,8 +93,8 @@ def main(args):
         checkpoint_file = os.path.join(os.getcwd(), checkpoint_path)
         slp_gcn.load_state_dict(torch.load(checkpoint_file, map_location=device))
 
-    # reduce/increase dimension of nodes'features
-    print("********** PREPROCESS FEATURES **********")
+    # reduce/increase dimension of training set
+    print("********** PREPROCESS FEATURES FOR TRAINING SET **********")
     slp = SLP(in_feats, h_feats).to(device)
     model_dict = load_parameters(checkpoint_file, slp)
     slp.load_state_dict(model_dict)
@@ -115,7 +115,8 @@ def main(args):
     model_dict = load_parameters(checkpoint_file, gcn)
     gcn.load_state_dict(model_dict)
 
-    # Find fixpoint
+    # Find fixpoint for training set
+    print("********** FIND FIXPOINT FOR TRAINING SET **********")
     if args.method == 'graph_optimization':
         print("********** OPTIMIZATION ON WHOLE GRAPH **********")
         if args.dataset in 'cora, reddit-self-loop':
@@ -149,6 +150,7 @@ def main(args):
         elif 'tu' in args.dataset:
             H, found_indices, min_cost_func = broyden_method_tu(gcn, train_dataset_reduced, args)
 
+    # Save result
     H_path = '../outputs/H_' + args.dataset + '_' + args.method + '.pkl'
     H_file = os.path.join(os.getcwd(), H_path)
     torch.save(H, H_file)
@@ -161,32 +163,72 @@ def main(args):
         torch.save(found_indices, indices_file)
 
     # Test fixpoint's performance in classification
-    if 'tu' in args.dataset:
-        last_layer = Last_Layer_4graph(h_feats, out_feats)
-        model_dict = load_parameters(checkpoint_file, last_layer)
-        last_layer.load_state_dict(model_dict)
-    else:
-        last_layer = Last_Layer_4node(h_feats, out_feats)
-        model_dict = load_parameters(checkpoint_file, last_layer)
-        last_layer.load_state_dict(model_dict)
+    if args.test:
+        print("********** TEST OF FIXPOINT **********")
+        # Reduce/increase dimension of validation set
+        print("********** PREPROCESS FEATURES FOR VALIDATION SET **********")
+        slp.eval()
+        with torch.no_grad():
+            if args.dataset == 'ppi':
+                features_val = torch.from_numpy(valid_dataset.features).to(device)
+                features_reduced_val = slp(features_val.float())
+            elif 'tu' in args.dataset:
+                valid_dataset_reduced = valid_dataset
+                for data in valid_dataset_reduced:
+                    data[0].ndata['feat'] = slp(data[0].ndata['feat'].float().to(device))
 
-    if 'tu' in args.dataset:
-        for graph_idx, (graph, graph_label) in enumerate(train_dataset):
-            graph.ndata['feat'] = H[graph_idx]
-        loss_fcn = nn.CrossEntropyLoss()
-        acc, mean_loss = evaluate_tu(train_dataloader,last_layer,loss_fcn,config['batch_size'])
-        print("Accuracy of Classification using fixpoint: {} !".format(acc))
-        print("Mean value of loss function: {} !".format(mean_loss))
-    elif args.dataset in 'cora, reddit-self-loop':
-        acc, loss = evaluate_cora_reddit(last_layer, g, H, labels, train_mask)
-        print("Accuracy of Classification using fixpoint: {} !".format(acc))
-        print("Value of loss function: {} !".format(loss))
-    elif args.dataset == 'ppi':
-        train_dataset.features = H
-        loss_fcn = nn.BCEWithLogitsLoss()
-        mean_score, mean_loss = evaluate_ppi(last_layer, train_dataloader, loss_fcn)
-        print("Mean value of F1 Score for Classification using fixpoint: {} !".format(mean_score))
-        print("Mean value of loss function: {} !".format(mean_loss))
+        # Find fixpoint for validation set
+        print("********** FIND FIXPOINT FOR VALIDATION SET **********")
+        if args.method == 'graph_optimization':
+            print("********** OPTIMIZATION ON WHOLE GRAPH **********")
+            if args.dataset == 'ppi':
+                H_val, min_cost_func_val = optimize_graph_cora_reddit_ppi(gcn, valid_dataset.graph, features_reduced_val, args)
+            elif 'tu' in args.dataset:
+                H_val, found_indices_val, min_cost_func_val = optimize_graph_tu(gcn, valid_dataset_reduced, args)
+        elif args.method == 'node_optimization':
+            print("********** OPTIMIZATION ON EACH NODE **********")
+            if args.dataset == 'ppi':
+                H_val, found_indices_val = optimize_node_cora_reddit_ppi(gcn, valid_dataset.graph, features_reduced_val, args)
+            elif 'tu' in args.dataset:
+                H_val, found_indices_val = optimize_node_tu(gcn, valid_dataset_reduced, args)
+        elif args.method == 'newton_method':
+            print("********** NEWTON'S METHOD **********")
+            if args.dataset == 'ppi':
+                H_val, min_cost_func_val = newton_method_cora_reddit_ppi(gcn, valid_dataset.graph, features_reduced_val, args)
+            elif 'tu' in args.dataset:
+                H_val, found_indices_val, min_cost_func_val = newton_method_tu(gcn, valid_dataset_reduced, args)
+        elif 'broyden' in args.method:
+            print("********** BROYDEN'S METHOD **********")
+            if args.dataset == 'ppi':
+                H_val, min_cost_func_val = broyden_method_cora_reddit_ppi(gcn, valid_dataset.graph, features_reduced_val, args)
+            elif 'tu' in args.dataset:
+                H_val, found_indices_val, min_cost_func_val = broyden_method_tu(gcn, valid_dataset_reduced, args)
+
+        # Build last layer
+        print("********** BUILD LAST LAYER **********")
+        if 'tu' in args.dataset:
+            last_layer = Last_Layer_4graph(h_feats, out_feats)
+            model_dict = load_parameters(checkpoint_file, last_layer)
+            last_layer.load_state_dict(model_dict)
+        else:
+            last_layer = Last_Layer_4node(h_feats, out_feats)
+            model_dict = load_parameters(checkpoint_file, last_layer)
+            last_layer.load_state_dict(model_dict)
+
+        # Train last layer
+        print("********** TRAIN LAST LAYER **********")
+        if 'tu' in args.dataset:
+            for graph_idx, (graph, graph_label) in enumerate(train_dataset):
+                graph.ndata['feat'] = H[graph_idx]
+            for graph_idx, (graph, graph_label) in enumerate(valid_dataset):
+                graph.ndata['feat'] = H_val[graph_idx]
+            train_tu(last_layer, train_dataloader, valid_dataloader, args)
+        elif args.dataset in 'cora, reddit-self-loop':
+            train_cora_reddit(slp_gcn, g, H, labels, train_mask, test_mask, args)
+        elif args.dataset == 'ppi':
+            train_dataset.features = H
+            valid_dataset.features = H_val
+            train_ppi(slp_gcn, train_dataloader, valid_dataloader, args)
 
 if __name__ == '__main__':
 
@@ -196,7 +238,8 @@ if __name__ == '__main__':
     parser.add_argument('dataset', help='choose dataset from: cora, reddit-self-loop, ppi, aids, reddit-binary and imdb-binary')
     parser.add_argument('method', help='choose method from: graph_optimization, node_optimization and newton_method')
     parser.add_argument('--train', action='store_true', help='set true if model needs to be trained, i.e. no checkpoint available')
-    parser.add_argument('--fix_random', action='store_true', help='set true only when comparing fixpoints from different methods')
+    parser.add_argument('--fix_random', action='store_true', help='set true if repeatability required')
+    parser.add_argument('--test', action='store_true', help='set true to test fixpoint\'s performance in classification task' )
     args = parser.parse_args()
 
     print(args)

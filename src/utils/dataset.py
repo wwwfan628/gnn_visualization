@@ -47,7 +47,7 @@ def load_ppi(batch_size):
 
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, collate_fn=collate_ppi)
     valid_dataloader = DataLoader(valid_dataset, batch_size=batch_size, collate_fn=collate_ppi)
-    return train_dataset, train_dataloader, valid_dataloader
+    return train_dataset, valid_dataset, train_dataloader, valid_dataloader
 
 def collate_tu(batch):
     graphs, labels = map(list, zip(*batch))
@@ -93,7 +93,7 @@ def load_tu(dataset_name, train_ratio, validate_ratio, batch_size):
 
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_tu)
     valid_dataloader = DataLoader(valid_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_tu)
-    return statistics, train_dataset, train_dataloader, valid_dataloader
+    return statistics, train_dataset, valid_dataset, train_dataloader, valid_dataloader
 
 def load_dataset(args):
 
