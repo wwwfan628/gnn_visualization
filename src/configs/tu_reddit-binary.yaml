@@ -13,7 +13,7 @@ hidden_features: 16
 
 # training
 train_lr: 0.001
-train_max_epoch: 5
+train_max_epoch: 500
 train_patience: 10
 clip: 2.0
 
@@ -23,7 +23,7 @@ model_parameter_path:
 # optimization
 graph_optimization:
   optimize_lr: 0.01
-  optimize_max_epoch: 500
+  optimize_max_epoch: 50000
   optimize_tolerance: 0.001
 
 node_optimization:
