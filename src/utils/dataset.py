@@ -126,8 +126,8 @@ def load_dataset(args):
         validate_ratio = config['validate_ratio']
         batch_size = config['batch_size']
 
-        statistics, train_dataset, train_dataloader, valid_dataloader = load_tu(dataset_name, train_ratio, validate_ratio, batch_size)
+        statistics, train_dataset, valid_dataset, train_dataloader, valid_dataloader = load_tu(dataset_name, train_ratio, validate_ratio, batch_size)
 
-        return statistics, train_dataset, train_dataloader, valid_dataloader
+        return statistics, train_dataset, valid_dataset, train_dataloader, valid_dataloader
 
 
