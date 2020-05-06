@@ -6,7 +6,7 @@ from tensorboardX import SummaryWriter
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-def broyden_method_cora_reddit_ppi(net, graph, features, args):
+def broyden_method_cora_reddit_ppi(net, graph, features, args, save=False):
 
     writer = SummaryWriter(logdir='../logs/'+args.dataset+'_'+args.method)
 
@@ -69,7 +69,7 @@ def broyden_method_cora_reddit_ppi(net, graph, features, args):
         func_diff = func_resize_next - func_resize
         gradient_inverse_former = gradient_inverse_current.clone().detach().to(device)
 
-        if epoch % 50 == 0:    # save current best result
+        if save and epoch % 50 == 0:    # save current best result
             H_path = '../outputs/H_' + args.dataset + '_' + args.method + '.pkl'
             H_file = os.path.join(os.getcwd(), H_path)
             torch.save(H_min_cost_func, H_file)
@@ -89,7 +89,7 @@ def broyden_method_cora_reddit_ppi(net, graph, features, args):
     return H_min_cost_func, min_cost_func
 
 
-def broyden_method_tu(net, dataset_reduced, args):
+def broyden_method_tu(net, dataset_reduced, args, save=False):
 
     writer = SummaryWriter(logdir='../logs/'+args.dataset+'_'+args.method)
 
@@ -172,16 +172,17 @@ def broyden_method_tu(net, dataset_reduced, args):
 
         H_min_cost_func.append(H_min_cost_func_graph)
         min_cost_func[graph_id] = min_cost_func_graph
-        # save current result
-        H_path = '../outputs/H_' + args.dataset + '_' + args.method + '.pkl'
-        H_file = os.path.join(os.getcwd(), H_path)
-        torch.save(H_min_cost_func, H_file)
-        cost_func_path = '../outputs/cost_func_' + args.dataset + '_' + args.method + '.pkl'
-        cost_func_file = os.path.join(os.getcwd(), cost_func_path)
-        torch.save(min_cost_func, cost_func_file)
-        indices_path = '../outputs/indices_' + args.dataset + '_' + args.method + '.pkl'
-        indices_file = os.path.join(os.getcwd(), indices_path)
-        torch.save(fixpoint_found_graph_ind, indices_file)
+
+        if save:# save current result
+            H_path = '../outputs/H_' + args.dataset + '_' + args.method + '.pkl'
+            H_file = os.path.join(os.getcwd(), H_path)
+            torch.save(H_min_cost_func, H_file)
+            cost_func_path = '../outputs/cost_func_' + args.dataset + '_' + args.method + '.pkl'
+            cost_func_file = os.path.join(os.getcwd(), cost_func_path)
+            torch.save(min_cost_func, cost_func_file)
+            indices_path = '../outputs/indices_' + args.dataset + '_' + args.method + '.pkl'
+            indices_file = os.path.join(os.getcwd(), indices_path)
+            torch.save(fixpoint_found_graph_ind, indices_file)
 
     num_found = fixpoint_found_graph_ind[fixpoint_found_graph_ind == True].shape[0]
     print("The number of graphs successfully finding fixpoint: {} ".format(num_found))

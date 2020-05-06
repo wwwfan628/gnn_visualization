@@ -120,11 +120,11 @@ def main(args):
     if args.method == 'graph_optimization':
         print("********** OPTIMIZATION ON WHOLE GRAPH **********")
         if args.dataset in 'cora, reddit-self-loop':
-            H, min_cost_func = optimize_graph_cora_reddit_ppi(gcn, g, features_reduced, args)
+            H, min_cost_func = optimize_graph_cora_reddit_ppi(gcn, g, features_reduced, args, save=True)
         elif args.dataset == 'ppi':
-            H, min_cost_func = optimize_graph_cora_reddit_ppi(gcn, train_dataset.graph, features_reduced, args)
+            H, min_cost_func = optimize_graph_cora_reddit_ppi(gcn, train_dataset.graph, features_reduced, args, save=True)
         elif 'tu' in args.dataset:
-            H, found_indices, min_cost_func = optimize_graph_tu(gcn, train_dataset_reduced, args)
+            H, found_indices, min_cost_func = optimize_graph_tu(gcn, train_dataset_reduced, args, save=True)
     elif args.method == 'node_optimization':
         print("********** OPTIMIZATION ON EACH NODE **********")
         if args.dataset in 'cora, reddit-self-loop':
@@ -136,19 +136,19 @@ def main(args):
     elif args.method == 'newton_method':
         print("********** NEWTON'S METHOD **********")
         if args.dataset in 'cora, reddit-self-loop':
-            H, min_cost_func = newton_method_cora_reddit_ppi(gcn, g, features_reduced, args)
+            H, min_cost_func = newton_method_cora_reddit_ppi(gcn, g, features_reduced, args, save=True)
         elif args.dataset == 'ppi':
-            H, min_cost_func = newton_method_cora_reddit_ppi(gcn, train_dataset.graph, features_reduced, args)
+            H, min_cost_func = newton_method_cora_reddit_ppi(gcn, train_dataset.graph, features_reduced, args, save=True)
         elif 'tu' in args.dataset:
-            H, found_indices, min_cost_func = newton_method_tu(gcn, train_dataset_reduced, args)
+            H, found_indices, min_cost_func = newton_method_tu(gcn, train_dataset_reduced, args, save=True)
     elif 'broyden' in args.method:
         print("********** BROYDEN'S METHOD **********")
         if args.dataset in 'cora, reddit-self-loop':
-            H, min_cost_func = broyden_method_cora_reddit_ppi(gcn, g, features_reduced, args)
+            H, min_cost_func = broyden_method_cora_reddit_ppi(gcn, g, features_reduced, args, save=True)
         elif args.dataset == 'ppi':
-            H, min_cost_func = broyden_method_cora_reddit_ppi(gcn, train_dataset.graph, features_reduced, args)
+            H, min_cost_func = broyden_method_cora_reddit_ppi(gcn, train_dataset.graph, features_reduced, args, save=True)
         elif 'tu' in args.dataset:
-            H, found_indices, min_cost_func = broyden_method_tu(gcn, train_dataset_reduced, args)
+            H, found_indices, min_cost_func = broyden_method_tu(gcn, train_dataset_reduced, args, save=True)
 
     # Save result
     H_path = '../outputs/H_' + args.dataset + '_' + args.method + '.pkl'
