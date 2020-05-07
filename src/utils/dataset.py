@@ -11,7 +11,7 @@ import yaml
 import os
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
+print('dataset.py running on {}!'.format(device))
 
 def load_citation(args):
     data = load_data(args)
@@ -54,9 +54,9 @@ def collate_tu(batch):
     # batch graphs and cast to PyTorch tensor
     for graph in graphs:
         for (key, value) in graph.ndata.items():
-            graph.ndata[key] = torch.FloatTensor(value.float()).to(device)
+            graph.ndata[key] = torch.FloatTensor(value.float())
         for (key, value) in graph.edata.items():
-            graph.edata[key] = torch.FloatTensor(value.float()).to(device)
+            graph.edata[key] = torch.FloatTensor(value.float())
     batched_graphs = dgl.batch(graphs)
     # cast to PyTorch tensor
     batched_labels = torch.LongTensor(np.array(labels).flatten()).to(device)
