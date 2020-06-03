@@ -112,8 +112,8 @@ def load_dataset(args):
             config = yaml.load(f, Loader=yaml.FullLoader)
         batch_size = config['batch_size']
 
-        train_dataset, train_dataloader, valid_dataloader = load_ppi(batch_size)
-        return train_dataset, train_dataloader, valid_dataloader
+        train_dataset, valid_dataset, train_dataloader, valid_dataloader = load_ppi(batch_size)
+        return train_dataset, valid_dataset, train_dataloader, valid_dataloader
 
     elif 'tu' in args.dataset:
 

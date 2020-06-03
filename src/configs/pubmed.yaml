@@ -1,4 +1,4 @@
-# Configuration file for dataset cora
+# Configuration file for dataset pubmed
 
 # model
 hidden_features: 128
@@ -31,4 +31,3 @@ newton_method:
 broyden_method:
   max_epoch: 500
   tolerance: 0.001
-
