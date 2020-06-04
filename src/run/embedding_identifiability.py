@@ -60,16 +60,16 @@ def main(args):
 
     print("********** BUILD REGRESSION MODEL TO RECOVER INPUT FROM EMBEDDING **********")
     if args.dataset in 'cora, citeseer, pubmed':
-        embedding = gcn_baseline(g, features)[1].clone().detach().to(device)
+        embedding = gcn_baseline(g, features, args)[1].clone().detach().to(device)
         input_features = features.clone().detach().to(device)
         reg_in = embedding.shape[1]
         reg_out = input_features.shape[1]
         reg_h = 256
     elif args.dataset == 'ppi':
         for data in train_dataset:
-            data[0].ndata['embedding'] = gcn_baseline(data[0], data[0].ndata['feat'].float())[1].detach()
+            data[0].ndata['embedding'] = gcn_baseline(data[0], data[0].ndata['feat'].float(), args)[1].detach()
         for data in valid_dataset:
-            data[0].ndata['embedding'] = gcn_baseline(data[0], data[0].ndata['feat'].float())[1].detach()
+            data[0].ndata['embedding'] = gcn_baseline(data[0], data[0].ndata['feat'].float(), args)[1].detach()
         reg_in = data[0].ndata['embedding'].shape[1]
         reg_out = data[0].ndata['feat'].shape[1]
         reg_h = 64
