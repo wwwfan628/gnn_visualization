@@ -104,11 +104,11 @@ def main(args):
                 nn = dist.topk(1, largest=False)
             elif args.regression_metric == 'cos':
                 node_reg_output = node_reg_output.expand_as(neighbour_feat)
-                cos_dist = torch.nn.functional.cosine_similarity(dim=1)
-                dist = cos_dist(neighbour_feat, node_reg_output)
+                dist = torch.nn.functional.cosine_similarity(neighbour_feat, node_reg_output)
                 nn = dist.topk(1, largest=False)
             # record the index of nn
             nn_list[node_ind] = g.adjacency_matrix(transpose=True)[node_ind]._indices()[0,nn.indices].item()
+            print('Node_id: {} | Corresponding NN Node_id: {}'.format(node_ind, nn_list[node_ind]))
 
     print("********** COMPUTE IDENTIFIABILITY **********")
     if args.dataset in 'cora, reddit-self-loop, citeseer, pubmed':

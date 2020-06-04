@@ -140,7 +140,11 @@ def evaluate_reg_citation(model, input, output, mask, loss_fcn, args):
     model.eval()
     with torch.no_grad():
         predicted_output = model(input)
-        loss_test = loss_fcn(output[mask], predicted_output[mask])
+        if args.regression_metric == 'l2':
+            loss_test = loss_fcn(predicted_output[mask], output[mask])
+        elif args.regression_metric == 'cos':
+            y = torch.ones(output[mask].shape[0])
+            loss_test = loss_fcn(predicted_output[mask], output[mask],y)
         return loss_test
 
 
@@ -169,7 +173,11 @@ def train_reg_citation(net, input, output, train_mask, test_mask, args):
 
         net.train()
         predicted_output = net(input)
-        loss = loss_fcn(output[train_mask], predicted_output[train_mask])
+        if args.regression_metric == 'l2':
+            loss = loss_fcn(predicted_output[train_mask], output[train_mask])
+        elif args.regression_metric == 'cos':
+            y = torch.ones(output[train_mask].shape[0])
+            loss = loss_fcn(predicted_output[train_mask], output[train_mask],y)
 
         optimizer.zero_grad()
         loss.backward()
@@ -197,7 +205,7 @@ def evaluate_reg_ppi(model, valid_dataloader, loss_fcn):
         model.eval()
         with torch.no_grad():
             predicted_output = model(subgraph.ndata['embedding'].float().to(device))
-            loss_data = loss_fcn(subgraph.ndata['feat'].float(), predicted_output)
+            loss_data = loss_fcn(predicted_output, subgraph.ndata['feat'].float())
         val_loss_list.append(loss_data)
     mean_val_loss = np.array(val_loss_list).mean()
     return mean_val_loss
@@ -227,7 +235,7 @@ def train_reg_ppi(net, train_dataloader, valid_dataloader, args):
         loss_list = []
         for batch, (subgraph, labels) in enumerate(train_dataloader):
             predicted_ouput = net(subgraph.ndata['embedding'].float().to(device))
-            loss = loss_fcn(subgraph.ndata['feat'].float(), predicted_ouput)
+            loss = loss_fcn(predicted_ouput, subgraph.ndata['feat'].float())
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
