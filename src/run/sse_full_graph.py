@@ -12,13 +12,13 @@ import numpy as np
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print('dataset.py running on {}!'.format(device))
 
-class SubgraphSteadyStateOperator(nn.Module):
+class FullgraphSteadyStateOperator(nn.Module):
     def __init__(self, n_input, n_hidden):
-        super(SubgraphSteadyStateOperator, self).__init__()
+        super(FullgraphSteadyStateOperator, self).__init__()
         self.linear1 = nn.Linear(n_input, n_hidden)
         self.linear2 = nn.Linear(n_hidden, n_hidden)
 
-    def forward(self, subg):
+    def forward(self, g):
         def message_func(edges):
             x = edges.src['x']
             h = edges.src['h']
@@ -29,8 +29,8 @@ class SubgraphSteadyStateOperator(nn.Module):
             z = torch.cat([nodes.data['x'], m], dim=1)
             return {'h': self.linear2(F.relu(self.linear1(z)))}
 
-        subg.block_compute(0, message_func, reduce_func)
-        return subg.layers[-1].data['h']
+        g.update_all(message_func, reduce_func)
+        return g.ndata['h']
 
 class Predictor(nn.Module):
     def __init__(self, n_hidden, n_output):
@@ -41,63 +41,33 @@ class Predictor(nn.Module):
     def forward(self, h):
         return self.linear2(F.relu(self.linear1(h)))
 
-def update_parameters_subgraph(subg, steady_state_operator, predictor, optimizer):
+def update_parameters_fullgraph(g, label_nodes, steady_state_operator, predictor, optimizer):
     steady_state_operator.train()
     predictor.train()
-    steady_state_operator(subg)
-    z = predictor(subg.layers[-1].data['h'])
+    steady_state_operator(g)
+    z = predictor(g.ndata['h'][label_nodes])
     y_predict = F.log_softmax(z, 1)
-    y = subg.layers[-1].data['y']  # label
+    y = g.ndata['y'][label_nodes] # label
     loss = F.nll_loss(y_predict, y)
 
     optimizer.zero_grad()
-    loss.backward()
+    loss.backward(retain_graph=True)
     optimizer.step()  # TODO: divide gradients by the number of labelled nodes?
+    return loss.item()
 
-def update_embeddings_subgraph(g, steady_state_operator, alpha=0.1):
-    # Note that we are only updating the embeddings of seed nodes here.
-    # The reason is that only the seed nodes have ample information
-    # from neighbors, especially if the subgraph is small (e.g. 1-hops)
-    prev_h = g.layers[-1].data['h']
+def update_embeddings(g, steady_state_operator, alpha=0.1):
+    prev_h = g.ndata['h']
     next_h = steady_state_operator(g)
-    g.layers[-1].data['h'] = (1 - alpha) * prev_h + alpha * next_h
+    g.ndata['h'] = (1 - alpha) * prev_h + alpha * next_h
 
-def train_on_subgraphs(g, label_nodes, batch_size, neigh_expand, steady_state_operator, predictor, optimizer, n_embedding_updates = 8, n_parameter_updates = 5, alpha = 0.1):
-    # To train SSE, we create two subgraph samplers with the
-    # `NeighborSampler` API for each phase.
-
-    # The first phase samples from all vertices in the graph.
-    sampler = dgl.contrib.sampling.NeighborSampler(g, batch_size, neigh_expand, num_hops=1, shuffle=True)
-    sampler_iter = iter(sampler)
-
-    # The second phase only samples from labeled vertices.
-    sampler_train = dgl.contrib.sampling.NeighborSampler(g, batch_size, neigh_expand, seed_nodes=label_nodes, num_hops=1, shuffle=True)
-    sampler_train_iter = iter(sampler_train)
-
+def train_on_fullgraph(g, label_nodes, steady_state_operator, predictor, optimizer, n_embedding_updates = 8, n_parameter_updates = 5, alpha = 0.1):
+    # The first phase
     for i in range(n_embedding_updates):
-        subg = next(sampler_iter)
-        # Currently, subgraphing does not copy or share features
-        # automatically.  Therefore, we need to copy the node
-        # embeddings of the subgraph from the parent graph with
-        # `copy_from_parent()` before computing...
-        subg.copy_from_parent()
-        # print('!!!')
-        # print('Before update')
-        # print(subg.layers[-1].data['h'])
-        update_embeddings_subgraph(subg, steady_state_operator, alpha=alpha)
-        # print('After update')
-        # print(subg.layers[-1].data['h'])
-        # ... and copy them back to the parent graph.
-        g.ndata['h'][subg.layer_parent_nid(-1)] = subg.layers[-1].data['h'].detach()
+        update_embeddings(g, steady_state_operator, alpha=alpha)
+    # The second phase
     for i in range(n_parameter_updates):
-        try:
-            subg = next(sampler_train_iter)
-        except:
-            break
-        # Again we need to copy features from parent graph
-        subg.copy_from_parent()
-        update_parameters_subgraph(subg, steady_state_operator, predictor, optimizer)
-        # We don't need to copy the features back to parent graph.
+        loss = update_parameters_fullgraph(g, label_nodes, steady_state_operator, predictor, optimizer)
+    return loss
 
 def test(g, test_nodes, predictor):
     predictor.eval()
@@ -122,26 +92,23 @@ def load_citation(args):
     return g, features, labels, train_mask, test_mask
 
 def main(args):
-    subgraph_steady_state_operator = SubgraphSteadyStateOperator(args.n_input,args.n_hidden)
+    fullgraph_steady_state_operator = FullgraphSteadyStateOperator(args.n_input,args.n_hidden)
     predictor = Predictor(args.n_hidden, args.n_output)
-    params = list(subgraph_steady_state_operator.parameters()) + list(predictor.parameters())
+    params = list(fullgraph_steady_state_operator.parameters()) + list(predictor.parameters())
     optimizer = torch.optim.Adam(params, lr=args.lr)
 
     # load dataset
     g, features, labels, train_mask, test_mask = load_citation(args)
-    g.readonly(True)
     g.ndata['x'] = features.clone().detach()
-    g.ndata['h'] = torch.zeros((g.number_of_nodes(), args.n_hidden))
+    g.ndata['h'] = torch.normal(0, 1, size=(g.number_of_nodes(), args.n_hidden)).requires_grad_(False)
     g.ndata['y'] = labels.clone().detach()
-    print('original ndata[x]')
-    print(g.ndata['x'])
-
+    g.readonly(True)
     nodes_train = np.arange(features.shape[0])[train_mask]
     nodes_test = np.arange(features.shape[0])[test_mask]
 
     y_bars = []
     for i in range(args.n_epochs):
-        train_on_subgraphs(g, nodes_train, args.batch_size, args.neigh_expand, subgraph_steady_state_operator,
+        loss = train_on_fullgraph(g, nodes_train, fullgraph_steady_state_operator,
             predictor, optimizer, args.n_embedding_updates, args.n_parameter_updates, args.alpha)
         accuracy_train, _ = test(g, nodes_train, predictor)
         accuracy_test, z = test(g, nodes_test, predictor)
@@ -160,12 +127,11 @@ if __name__ == '__main__':
     parser.add_argument('--n_hidden', type=int, default=16)
     parser.add_argument('--n_input', type=int, default=2882)
     parser.add_argument('--n_output', type=int, default=7)
-    parser.add_argument('--n_epochs', type=int, default=1000)
+    parser.add_argument('--n_epochs', type=int, default=500)
     parser.add_argument('--n_embedding_updates', type=int, default=8)
     parser.add_argument('--n_parameter_updates', type=int, default=5)
     parser.add_argument('--alpha', type=float, default=0.1)
-    parser.add_argument('--batch_size', type=int, default=30)
-    parser.add_argument("--neigh_expand", type=int, default=8, help="the number of neighbors to sample.")
+    parser.add_argument('--batch_size', type=int, default=128)
 
     args = parser.parse_args()
 
