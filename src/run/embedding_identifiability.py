@@ -1,6 +1,6 @@
 from src.utils.dataset import load_dataset
 from src.utils.train_embedding_id import train_citation, train_ppi, train_reg_citation,train_reg_ppi
-from src.models.gcn_embedding_id import GCN_Baseline, GCN_Baseline_3Layers
+from src.models.gcn_embedding_id import GCN_2Layers, GCN_3Layers, GCN_4Layers, GCN_5Layers, GCN_6Layers
 from src.models.regression_embedding_id import MLP, SLP
 
 import argparse
@@ -43,10 +43,17 @@ def main(args):
         in_feats = train_dataset.features.shape[1]
         out_feats = train_dataset.labels.shape[1]
 
-    if args.gcn_model == '3':
-        gcn_baseline = GCN_Baseline_3Layers(in_feats, h_feats, out_feats).to(device)
-    elif args.gcn_model == '2':
-        gcn_baseline = GCN_Baseline(in_feats, h_feats, out_feats).to(device)
+    if args.gcn_model == '2':
+        gcn_baseline = GCN_2Layers(in_feats, h_feats, out_feats).to(device)
+    elif args.gcn_model == '3':
+        gcn_baseline = GCN_3Layers(in_feats, h_feats, out_feats).to(device)
+    elif args.gcn_model == '4':
+        gcn_baseline = GCN_4Layers(in_feats, h_feats, out_feats).to(device)
+    elif args.gcn_model == '5':
+        gcn_baseline = GCN_5Layers(in_feats, h_feats, out_feats).to(device)
+    elif args.gcn_model == '6':
+        gcn_baseline = GCN_6Layers(in_feats, h_feats, out_feats).to(device)
+
 
     print("********** TRAIN GCN NETWORK **********")
     if args.dataset in 'cora, reddit-self-loop, citeseer, pubmed':
@@ -117,7 +124,7 @@ def main(args):
             if node_ind == nn_list[node_ind]:
                 num_identifiable+=1
         identifiability_rate = num_identifiable / g.number_of_nodes()
-    print('identifiability_rate = {}%'.format(identifiability_rate*100))
+    print('identifiability_rate = {} %'.format(identifiability_rate*100))
 
 
 if __name__ == '__main__':
