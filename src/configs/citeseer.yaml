@@ -1,7 +1,7 @@
 # Configuration file for dataset citeseer
 
 # model
-hidden_features: 128
+hidden_features: 16
 
 # training
 train_lr: 0.001
@@ -31,3 +31,6 @@ newton_method:
 broyden_method:
   max_epoch: 500
   tolerance: 0.001
+
+# Embedding Identifiability
+regression_hidden_features: 256

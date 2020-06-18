@@ -9,11 +9,11 @@ from sklearn.metrics import f1_score
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-def evaluate_citation(model, graph, features, labels, mask, args):
+def evaluate_citation(model, graph, features, labels, mask):
     # used to evaluate the performance of the model on test dataset
     model.eval()
     with torch.no_grad():
-        logits = model(graph, features, args)[0]
+        logits = model(graph, features)[0]
         logp = F.log_softmax(logits, 1)
         loss_test = F.nll_loss(logp[mask], labels[mask])
         logits = logits[mask]
@@ -45,7 +45,7 @@ def train_citation(net, graph, features, labels, train_mask, test_mask, args):
         t0 = time.time()
 
         net.train()
-        logits = net(graph, features, args)[0]
+        logits = net(graph, features)[0]
         logp = F.log_softmax(logits, 1)
         loss = F.nll_loss(logp[train_mask], labels[train_mask])
 
@@ -55,7 +55,7 @@ def train_citation(net, graph, features, labels, train_mask, test_mask, args):
 
         if epoch % 1 == 0:  # Validation
             dur.append(time.time() - t0)
-            acc, loss_valid = evaluate_citation(net, graph, features, labels, test_mask, args)
+            acc, loss_valid = evaluate_citation(net, graph, features, labels, test_mask)
             print("Epoch {:04d} | Loss {:.4f} | Test Acc {:.4f} | Time(s) {:.4f}".format(epoch+1, loss.item(), acc, np.mean(dur)))
 
             # early stop
@@ -70,13 +70,13 @@ def train_citation(net, graph, features, labels, train_mask, test_mask, args):
 
 
 
-def evaluate_ppi(model, valid_dataloader, loss_fcn, args):
+def evaluate_ppi(model, valid_dataloader, loss_fcn):
     score_list = []
     val_loss_list = []
     for batch, (subgraph, labels) in enumerate(valid_dataloader):
         model.eval()
         with torch.no_grad():
-            output = model(subgraph, subgraph.ndata['feat'].float().to(device), args)[0]
+            output = model(subgraph, subgraph.ndata['feat'].float().to(device))[0]
             loss_data = loss_fcn(output, labels.float().to(device)).item()
             predict = np.where(output.data.cpu().numpy() >= 0.5, 1, 0)
             score = f1_score(labels.data.cpu().numpy(), predict, average='micro')
@@ -87,7 +87,7 @@ def evaluate_ppi(model, valid_dataloader, loss_fcn, args):
     return mean_score, mean_val_loss
 
 
-def train_ppi(net, train_dataloader, valid_dataloader, args):
+def train_ppi(net, train_dataloader, valid_dataloader):
 
     config_file = os.path.join(os.getcwd(), '../configs/ppi.yaml')
     with open(config_file, 'r') as f:
@@ -111,7 +111,7 @@ def train_ppi(net, train_dataloader, valid_dataloader, args):
         net.train()
         loss_list = []
         for batch, (subgraph, labels) in enumerate(train_dataloader):
-            logits = net(subgraph, subgraph.ndata['feat'].float().to(device), args)[0]
+            logits = net(subgraph, subgraph.ndata['feat'].float().to(device))[0]
             loss = loss_fcn(logits, labels.float().to(device))
             optimizer.zero_grad()
             loss.backward()
@@ -121,7 +121,7 @@ def train_ppi(net, train_dataloader, valid_dataloader, args):
 
         if epoch % 1 == 0:  # Validation
             dur.append(time.time() - t0)
-            mean_score, mean_val_loss = evaluate_ppi(net, valid_dataloader, loss_fcn, args)
+            mean_score, mean_val_loss = evaluate_ppi(net, valid_dataloader, loss_fcn)
             print("Epoch {:04d} | Loss {:.4f} | Valid F1-Score {:.4f} | Time(s) {:.4f}".format(epoch + 1, loss_data, mean_score, np.mean(dur)))
             # early stop
             if mean_score > best_score or best_loss > mean_val_loss:
