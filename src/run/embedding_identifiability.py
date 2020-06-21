@@ -150,20 +150,17 @@ def main(args):
                     if args.dataset in 'cora, reddit-self-loop, citeseer, pubmed':
                         train_reg_citation(reg, embedding, input_features, train_mask, test_mask, args)
                     elif args.dataset == 'ppi':
-                        train_reg_ppi(reg, train_dataloader, valid_dataloader, args)
+                        train_reg_ppi(reg, train_dataloader, valid_dataloader)
 
                 print("********** GCN MODEL: GCN_{}layer **********".format(gcn_model_layer))
                 print("********** EXPERIMENT ITERATION: {} **********".format(repeat_time+1))
                 print("********** INTERMEDIATE LAYER: {} **********".format(intermediate_layer))
                 if args.info == 'self-identity':
-                    if args.dataset in 'cora, reddit-self-loop, citeseer, pubmed':
+                    if args.dataset in 'cora, citeseer, pubmed':
                         if args.knn == 1:
                             print("********** NEAREST NEIGHBOUR TO FIND CORRESPONDING INPUT **********")
                             nn_list = np.zeros(g.number_of_nodes())   # indices of the found nearest neighbourhood of nodes
-                            if args.regression_model in 'mlp, slp':
-                                reg_output = reg(embedding)
-                            else:
-                                reg_output = embedding.clone().detach().to(device)
+                            reg_output = reg(embedding)
                             for node_ind in range(g.number_of_nodes()):
                                 neighbour_ind = (g.adjacency_matrix(transpose=True)[node_ind].to_dense()==1)
                                 neighbour_feat = input_features[neighbour_ind]
@@ -182,10 +179,7 @@ def main(args):
                         elif args.knn == 2:
                             print("********** 2-NN TO FIND CORRESPONDING INPUT **********")
                             nn_list = np.zeros([g.number_of_nodes(),2])  # indices of the found nearest neighbourhood of nodes
-                            if args.regression_model in 'mlp, slp':
-                                reg_output = reg(embedding)
-                            else:
-                                reg_output = embedding.clone().detach().to(device)
+                            reg_output = reg(embedding)
                             for node_ind in range(g.number_of_nodes()):
                                 neighbour_ind = (g.adjacency_matrix(transpose=True)[node_ind].to_dense() == 1)
                                 neighbour_feat = input_features[neighbour_ind]
@@ -204,10 +198,7 @@ def main(args):
                         elif args.knn == 3:
                             print("********** 3-NN TO FIND CORRESPONDING INPUT **********")
                             nn_list = np.zeros([g.number_of_nodes(), 3])  # indices of the found nearest neighbourhood of nodes
-                            if args.regression_model in 'mlp, slp':
-                                reg_output = reg(embedding)
-                            else:
-                                reg_output = embedding.clone().detach().to(device)
+                            reg_output = reg(embedding)
                             for node_ind in range(g.number_of_nodes()):
                                 neighbour_ind = (g.adjacency_matrix(transpose=True)[node_ind].to_dense() == 1)
                                 neighbour_feat = input_features[neighbour_ind]
@@ -223,6 +214,27 @@ def main(args):
                                 # record the index of nn
                                 nn_list[node_ind] = g.adjacency_matrix(transpose=True)[node_ind]._indices()[0, nn.indices]
                                 print('Node_id: {} | Corresponding NN Node_id: {}, {}, {}'.format(node_ind, nn_list[node_ind][0], nn_list[node_ind][1], nn_list[node_ind][2]))
+                    elif args.dataset == 'ppi':
+                        if args.knn == 1:
+                            print("********** NEAREST NEIGHBOUR TO FIND CORRESPONDING INPUT **********")
+                            nn_list = np.zeros(0)   # indices of the found nearest neighbourhood of nodes
+                            for data in train_dataset:
+                                reg_output = reg(embedding)
+                            for node_ind in range(g.number_of_nodes()):
+                                neighbour_ind = (g.adjacency_matrix(transpose=True)[node_ind].to_dense()==1)
+                                neighbour_feat = input_features[neighbour_ind]
+                                node_reg_output = reg_output[node_ind]
+                                # Find Nearest Neighbour
+                                if args.regression_metric == 'l2':
+                                    dist = torch.norm(neighbour_feat - node_reg_output, dim=1, p=None)
+                                    nn = dist.topk(1, largest=False)
+                                elif args.regression_metric == 'cos':
+                                    node_reg_output = node_reg_output.expand_as(neighbour_feat)
+                                    dist = torch.nn.functional.cosine_similarity(neighbour_feat, node_reg_output)
+                                    nn = dist.topk(1, largest=False)
+                                # record the index of nn
+                                nn_list[node_ind] = g.adjacency_matrix(transpose=True)[node_ind]._indices()[0,nn.indices].item()
+                                print('Node_id: {} | Corresponding NN Node_id: {}'.format(node_ind, nn_list[node_ind]))
 
                 print("********** GCN MODEL: GCN_{}layer **********".format(gcn_model_layer))
                 print("********** EXPERIMENT ITERATION: {} **********".format(repeat_time+1))

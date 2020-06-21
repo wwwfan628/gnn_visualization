@@ -211,7 +211,7 @@ def evaluate_reg_ppi(model, valid_dataloader, loss_fcn):
     return mean_val_loss
 
 
-def train_reg_ppi(net, train_dataloader, valid_dataloader, args): #TODO: metric = cos not implemented
+def train_reg_ppi(net, train_dataloader, valid_dataloader): #TODO: metric = cos not implemented
 
     config_file = os.path.join(os.getcwd(), '../configs/ppi.yaml')
     with open(config_file, 'r') as f:
