@@ -9,7 +9,7 @@ import os
 import numpy as np
 import yaml
 import pandas as pd
-
+# TODO: ppi not finished yet!
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print("RUNNING ON: {}".format(device))
