@@ -119,7 +119,7 @@ def main(args):
             print("********** EXPERIMENT ITERATION: {} **********".format(repeat_time+1))
             print("********** TRAIN GCN NETWORK **********")
             if args.dataset in 'cora, citeseer, pubmed':
-                train_citation(gcn, g, features, labels, train_mask, test_mask, args)
+                _ = train_citation(gcn, g, features, labels, train_mask, test_mask, args)
             elif args.dataset == 'ppi':
                 train_ppi(gcn, train_dataloader, valid_dataloader, args)
 
@@ -207,7 +207,7 @@ def main(args):
                             nn_list = np.zeros([g.number_of_nodes(),2])  # indices of the found nearest neighbourhood of nodes
                             reg_output = reg(embedding)
                             for node_ind in range(g.number_of_nodes()):
-                                neighbour_ind = (g.adjacency_matrix(transpose=True)[node_ind].to_dense() == 1)
+                                neighbour_ind = g.adjacency_matrix(transpose=True)[node_ind].to_dense() == 1
                                 neighbour_feat = input_features[neighbour_ind]
                                 node_reg_output = reg_output[node_ind]
                                 # Find Nearest Neighbour
@@ -253,7 +253,7 @@ def main(args):
 
                                 reg_output = reg(data[0].ndata['embedding'].float())
                                 for node_ind in range(data[0].number_of_nodes()):
-                                    neighbour_ind = (data[0].adjacency_matrix(transpose=True)[node_ind].to_dense()==1)
+                                    neighbour_ind = data[0].adjacency_matrix(transpose=True)[node_ind].to_dense()==1
                                     neighbour_feat = data[0].nadata['embedding'][neighbour_ind]
                                     node_reg_output = reg_output[node_ind]
                                     # Find Nearest Neighbour

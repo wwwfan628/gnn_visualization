@@ -9,6 +9,18 @@ from sklearn.metrics import f1_score
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+
+def classify_nodes_citation(model, graph, features, labels):
+    model.eval()
+    with torch.no_grad():
+        logits = model(graph, features)[0]
+        _, indices = torch.max(logits, dim=1)
+        correctly_classified_nodes = set(np.arange(graph.number_of_nodes())[indices==labels])
+        nodes = set(np.arange(graph.number_of_nodes()))
+        incorrectly_classified_nodes = nodes.difference(correctly_classified_nodes)
+    return correctly_classified_nodes, incorrectly_classified_nodes
+
+
 def evaluate_citation(model, graph, features, labels, mask):
     # used to evaluate the performance of the model on test dataset
     model.eval()
@@ -53,20 +65,20 @@ def train_citation(net, graph, features, labels, train_mask, test_mask, args):
         loss.backward()
         optimizer.step()
 
-        if epoch % 1 == 0:  # Validation
-            dur.append(time.time() - t0)
-            acc, loss_valid = evaluate_citation(net, graph, features, labels, test_mask)
-            print("Epoch {:04d} | Loss {:.4f} | Test Acc {:.4f} | Time(s) {:.4f}".format(epoch+1, loss.item(), acc, np.mean(dur)))
+        dur.append(time.time() - t0)
+        acc, loss_test = evaluate_citation(net, graph, features, labels, test_mask)
+        print("Epoch {:04d} | Loss {:.4f} | Test Acc {:.4f} | Time(s) {:.4f}".format(epoch+1, loss.item(), acc, np.mean(dur)))
 
-            # early stop
-            if acc > best_score or best_loss > loss_valid:
-                best_score = np.max((acc, best_score))
-                best_loss = np.min((best_loss, loss_valid))
-                cur_step = 0
-            else:
-                cur_step += 1
-                if cur_step == patience:
-                    break
+        # early stop
+        if acc > best_score or best_loss > loss_test:
+            best_score = np.max((acc, best_score))
+            best_loss = np.min((best_loss, loss_test))
+            cur_step = 0
+        else:
+            cur_step += 1
+            if cur_step == patience:
+                break
+    return acc
 
 
 
