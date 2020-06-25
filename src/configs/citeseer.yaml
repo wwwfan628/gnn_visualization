@@ -34,5 +34,5 @@ broyden_method:
 
 # Embedding Identifiability
 regression_hidden_features_identity: 256
-regression_hidden_features_degree: 7
+regression_hidden_features_degree: 64
 

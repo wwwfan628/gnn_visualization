@@ -1,5 +1,5 @@
 from src.utils.dataset import load_dataset
-from src.utils.train_embedding_id import train_citation, train_ppi, train_reg_citation,train_reg_ppi, classify_nodes_citation
+from src.utils.train_embedding_id import train_citation, train_ppi, train_regression_citation,train_reg_ppi, classify_nodes_citation
 from src.models.gcn_embedding_id import GCN_1Layer,GCN_2Layers,GCN_3Layers,GCN_4Layers,GCN_5Layers,GCN_6Layers,GCN_7Layers,GCN_8Layers
 from src.models.regression_embedding_id import MLP, SLP
 
@@ -34,13 +34,12 @@ def main(args):
         print("********** LOAD DATASET **********")
         g, features, labels, train_mask, test_mask = load_dataset(args)
 
-        # build network
+        # prepare to build network
         path = '../configs/' + args.dataset + '.yaml'
         config_file = os.path.join(os.getcwd(), path)
         with open(config_file, 'r') as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
         h_feats = config['hidden_features']
-
         in_feats = features.shape[1]
         out_feats = torch.max(labels).item() + 1
 
@@ -113,7 +112,7 @@ def main(args):
                     print("********** GCN MODEL: GCN_{}layer **********".format(gcn_model_layer))
                     print("********** INTERMEDIATE LAYER: {} **********".format(intermediate_layer))
                     print("********** TRAIN REGRESSION MODEL TO RECOVER INPUT FROM EMBEDDING **********")
-                    train_reg_citation(regression_model, embedding, input_features, train_mask, test_mask, args)
+                    train_regression_citation(regression_model, embedding, input_features, train_mask, test_mask, args)
 
                     print("********** EXPERIMENT ITERATION: {} **********".format(repeat_time + 1))
                     print("********** GCN MODEL: GCN_{}layer **********".format(gcn_model_layer))
@@ -153,12 +152,12 @@ def main(args):
                     if intermediate_layer == gcn_model_layer:
                         # compute relationship between accuracy & identifiability
                         identifiable_nodes_last_layer.update(identifiable_nodes_current_layer)
-                        nodes = set(np.arange(g.number_of_nodes()))
+                        nodes = set(nodes_indices)
                         unidentifiable_nodes_last_layer = nodes.difference(identifiable_nodes_last_layer)
-                        positive_positive = len(identifiable_nodes_last_layer.intersection(correct_classified_nodes))*1.0/g.number_of_nodes()
-                        positive_negative = len(identifiable_nodes_last_layer.intersection(incorrect_classified_nodes))*1.0/g.number_of_nodes()
-                        negative_positive = len(unidentifiable_nodes_last_layer.intersection(correct_classified_nodes))*1.0/g.number_of_nodes()
-                        negative_negative = len(unidentifiable_nodes_last_layer.intersection(incorrect_classified_nodes))*1.0/g.number_of_nodes()
+                        positive_positive = len(identifiable_nodes_last_layer.intersection(correct_classified_nodes))*1.0/num_nodes
+                        positive_negative = len(identifiable_nodes_last_layer.intersection(incorrect_classified_nodes))*1.0/num_nodes
+                        negative_positive = len(unidentifiable_nodes_last_layer.intersection(correct_classified_nodes))*1.0/num_nodes
+                        negative_negative = len(unidentifiable_nodes_last_layer.intersection(incorrect_classified_nodes))*1.0/num_nodes
                         print('++ = {} %'.format(positive_positive * 100))
                         print('+- = {} %'.format(positive_negative * 100))
                         print('-+ = {} %'.format(negative_positive * 100))
@@ -225,13 +224,100 @@ def main(args):
         save_path = os.path.join(outputs_subdir, save_subpath)
         relationship_id_acc_df.to_csv(save_path)
 
+    elif args.dataset == 'ppi':
+        # load dataset
+        print("********** LOAD DATASET **********")
+        train_dataset, valid_dataset, train_dataloader, valid_dataloader = load_dataset(args)
+
+        # prepare to build network
+        path = '../configs/' + args.dataset + '.yaml'
+        config_file = os.path.join(os.getcwd(), path)
+        with open(config_file, 'r') as f:
+            config = yaml.load(f, Loader=yaml.FullLoader)
+        h_feats = config['hidden_features']
+        in_feats = train_dataset.features.shape[1]
+        out_feats = train_dataset.labels.shape[1]
+
+        # result before averaging over experiments'iterations
+        # store 'identifiability rates'/'repeating rates'/'1-hop neighbours rates' for differnt iterations/layers/models
+        # 1st dim.:repeating time  2nd dim.:layer  3rd dim.:model
+        identifiability_rates = np.zeros([args.repeat_times, args.max_gcn_layers, args.max_gcn_layers])
+        repeating_rates = np.zeros([args.repeat_times, args.max_gcn_layers, args.max_gcn_layers])
+        neighbours_rates = np.zeros([args.repeat_times, args.max_gcn_layers, args.max_gcn_layers])
+        # store 'accracy'/'accuracy & identifiability' for different iterations/models
+        # 1st dim.:repeating time  2nd dim.:model
+        f1_scores = np.zeros([args.repeat_times, args.max_gcn_layers])
+        # 1st dim.:repeating time  2nd dim.:model  3rd dim.:identifiability-accuracy ++ +- -+ --
+        relationship_id_acc = np.zeros([args.repeat_times, args.max_gcn_layers, 4])
+
+        for repeat_time in np.arange(args.repeat_times):
+            for gcn_model_layer in np.arange(1, args.max_gcn_layers+1):
+                print("********** EXPERIMENT ITERATION: {} **********".format(repeat_time+1))
+                print("********** GCN MODEL: GCN_{}layers **********".format(gcn_model_layer))
+                print("********** BUILD GCN NETWORK**********")
+                if gcn_model_layer == 1:
+                    gcn = GCN_1Layer(in_feats, out_feats).to(device)
+                elif gcn_model_layer == 2:
+                    gcn = GCN_2Layers(in_feats, h_feats, out_feats).to(device)
+                elif gcn_model_layer == 3:
+                    gcn = GCN_3Layers(in_feats, h_feats, out_feats).to(device)
+                elif gcn_model_layer == 4:
+                    gcn = GCN_4Layers(in_feats, h_feats, out_feats).to(device)
+                elif gcn_model_layer == 5:
+                    gcn = GCN_5Layers(in_feats, h_feats, out_feats).to(device)
+                elif gcn_model_layer == 6:
+                    gcn = GCN_6Layers(in_feats, h_feats, out_feats).to(device)
+                elif gcn_model_layer == 7:
+                    gcn = GCN_7Layers(in_feats, h_feats, out_feats).to(device)
+                elif gcn_model_layer == 8:
+                    gcn = GCN_8Layers(in_feats, h_feats, out_feats).to(device)
+
+                print("********** EXPERIMENT ITERATION: {} **********".format(repeat_time+1))
+                print("********** GCN MODEL: GCN_{}layer **********".format(gcn_model_layer))
+                print("********** TRAIN GCN NETWORK **********")
+                f1_score = train_ppi(gcn, train_dataloader, valid_dataloader, args)
+                f1_scores[repeat_time, gcn_model_layer - 1] = f1_score
+
+                checkpoint_file_name = 'gcn_' + str(gcn_model_layer) + 'layers_' + args.dataset + '.pkl'
+                checkpoint_file = os.path.join(checkpoints_dir, checkpoint_file_name)
+                torch.save(gcn.state_dict(), checkpoint_file)
+
+                print("********** EXPERIMENT ITERATION: {} **********".format(repeat_time + 1))
+                print("********** GCN MODEL: GCN_{}layer **********".format(gcn_model_layer))
+                identifiable_nodes_1layer = set()  # store nodes that can be identified after 1st layer
+                identifiable_nodes_last_layer = set()  # store nodes that can be identified after last layer
+                for intermediate_layer in np.arange(1, gcn_model_layer + 1):
+                    identifiable_nodes_current_layer = set()  # store nodes that can be identified after current layer
+                    print("********** INTERMEDIATE LAYER: {} **********".format(intermediate_layer))
+                    print("********** BUILD REGRESSION MODEL TO RECOVER INPUT FROM EMBEDDING **********")
+                    # prepare to build the regression model
+                    for data in train_dataset:
+                        data[0].ndata['embedding'] = gcn(data[0], data[0].ndata['feat'].float(), args)[-intermediate_layer].detach()
+                    for data in valid_dataset:
+                        data[0].ndata['embedding'] = gcn(data[0], data[0].ndata['feat'].float(), args)[-intermediate_layer].detach()
+                    regression_in = data[0].ndata['embedding'].shape[1]
+                    regression_out = data[0].ndata['feat'].shape[1]
+                    regression_h = config['regression_hidden_features_identity']
+
+                    if args.regression_model == 'mlp':
+                        regression_model = MLP(regression_in, regression_h, regression_out)
+                    elif args.regression_model == 'slp':
+                        regression_model = SLP(regression_in, regression_out)
+
+                    print("********** EXPERIMENT ITERATION: {} **********".format(repeat_time + 1))
+                    print("********** GCN MODEL: GCN_{}layer **********".format(gcn_model_layer))
+                    print("********** INTERMEDIATE LAYER: {} **********".format(intermediate_layer))
+                    print("********** TRAIN REGRESSION MODEL TO RECOVER INPUT FROM EMBEDDING **********")
+                    train_reg_ppi(regression_model, train_dataloader, valid_dataloader)
+
+
 if __name__ == '__main__':
 
     # get parameters
     parser = argparse.ArgumentParser(description="Try to find fixpoint")
 
     parser.add_argument('--dataset', default='cora', help='choose dataset from: cora, pubmed, citeseer, ppi')
-    parser.add_argument('--info', default='self-identity', help='choose the information to recover from self-identity, neighbour-identity, self-identity30, or neighbour-identity30')
+    parser.add_argument('--info', default='self-identity', help='choose the information to recover')
     parser.add_argument('--regression_model', default='mlp', help='choose model structure from: slp, mlp')
     parser.add_argument('--regression_metric', default='cos', help='choose metric for regression and nearest neighbour from: l2 or cos')
     parser.add_argument('--knn', type=int, default=1, help='method to find the corresponding node among neighboring nodes after recovery, k=1,2 or 3')

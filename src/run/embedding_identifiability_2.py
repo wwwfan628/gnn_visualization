@@ -1,5 +1,5 @@
 from src.utils.dataset import load_dataset
-from src.utils.train_embedding_id import train_citation, train_ppi, train_reg_citation,train_reg_ppi
+from src.utils.train_embedding_id import train_citation, train_ppi, train_regression_citation,train_reg_ppi
 from src.models.gcn_embedding_id import GCN_1Layer,GCN_2Layers,GCN_3Layers,GCN_4Layers,GCN_5Layers,GCN_6Layers,GCN_7Layers,GCN_8Layers
 from src.models.regression_embedding_id import MLP, SLP
 
@@ -104,7 +104,7 @@ def main(args):
                     print("********** GCN MODEL: GCN_{}layer **********".format(gcn_model_layer))
                     print("********** INTERMEDIATE LAYER: {} **********".format(intermediate_layer))
                     print("********** TRAIN REGRESSION MODEL TO RECOVER INPUT FROM EMBEDDING **********")
-                    train_reg_citation(regression_model, embedding, input_features, train_mask, test_mask, args)
+                    train_regression_citation(regression_model, embedding, input_features, train_mask, test_mask, args)
 
                     print("********** EXPERIMENT ITERATION: {} **********".format(repeat_time + 1))
                     print("********** GCN MODEL: GCN_{}layer **********".format(gcn_model_layer))
@@ -200,7 +200,7 @@ if __name__ == '__main__':
     parser.add_argument('--regression_model', default='mlp', help='choose model structure from: slp, mlp')
     parser.add_argument('--regression_metric', default='cos', help='choose metric for regression and nearest neighbour from: l2 or cos')
     parser.add_argument('--knn', type=int, default=1, help='method to find the corresponding node among neighboring nodes after recovery, k=1,2 or 3')
-    parser.add_argument('--repeat_times', type=int, default=2, help='experiment repeating times for single layer')
+    parser.add_argument('--repeat_times', type=int, default=3, help='experiment repeating times for single layer')
     parser.add_argument('--max_gcn_layers', type=int, default=6, help='the maxmal gcn models\'s layer, not larger than 8')
     args = parser.parse_args()
 

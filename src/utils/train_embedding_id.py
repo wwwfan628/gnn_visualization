@@ -46,7 +46,7 @@ def train_citation(net, graph, features, labels, train_mask, test_mask, args):
     max_epoch = config['train_max_epoch']  # maximal number of training epochs
     # used for early stop
     patience = config['train_patience']
-    best_score = -1
+    best_accuracy = -1
     best_loss = float('inf')
     cur_step = 0
 
@@ -65,13 +65,14 @@ def train_citation(net, graph, features, labels, train_mask, test_mask, args):
         loss.backward()
         optimizer.step()
 
+        # validation
         dur.append(time.time() - t0)
         acc, loss_test = evaluate_citation(net, graph, features, labels, test_mask)
         print("Epoch {:04d} | Loss {:.4f} | Test Acc {:.4f} | Time(s) {:.4f}".format(epoch+1, loss.item(), acc, np.mean(dur)))
 
         # early stop
-        if acc > best_score or best_loss > loss_test:
-            best_score = np.max((acc, best_score))
+        if acc > best_accuracy or best_loss > loss_test:
+            best_accuracy = np.max((acc, best_accuracy))
             best_loss = np.min((best_loss, loss_test))
             cur_step = 0
         else:
@@ -80,6 +81,125 @@ def train_citation(net, graph, features, labels, train_mask, test_mask, args):
                 break
     return acc
 
+
+def evaluate_regression_citation(model, inputs, targets, mask, loss_fcn, args):
+    # used to evaluate the performance of the model on test dataset
+    model.eval()
+    with torch.no_grad():
+        predicted_outputs = model(inputs)
+        if args.regression_metric == 'l2':
+            loss_test = loss_fcn(predicted_outputs[mask], targets[mask])
+        elif args.regression_metric == 'cos':
+            y = torch.ones(targets[mask].shape[0])
+            loss_test = loss_fcn(predicted_outputs[mask], targets[mask], y)
+        return loss_test
+
+
+def train_regression_citation(net, inputs, targets, train_mask, test_mask, args):
+    path = '../configs/' + args.dataset + '.yaml'
+    config_file = os.path.join(os.getcwd(), path)
+    with open(config_file, 'r') as f:
+        config = yaml.load(f, Loader=yaml.FullLoader)
+
+    lr = config['train_lr']  # learning rate
+    max_epoch = config['train_max_epoch']  # maximal number of training epochs
+    # used for early stop
+    patience = config['train_patience']
+    best_loss = float('inf')
+    cur_step = 0
+
+    optimizer = torch.optim.Adam(net.parameters(), lr=lr)
+    if args.regression_metric == 'l2':
+        loss_fcn = nn.MSELoss()
+    elif args.regression_metric == 'cos':
+        loss_fcn = nn.CosineEmbeddingLoss()
+    dur = []
+
+    for epoch in range(max_epoch):
+        t0 = time.time()
+
+        net.train()
+        predicted_outputs = net(inputs)
+        if args.regression_metric == 'l2':
+            loss = loss_fcn(predicted_outputs[train_mask], targets[train_mask])
+        elif args.regression_metric == 'cos':
+            y = torch.ones(targets[train_mask].shape[0])
+            loss = loss_fcn(predicted_outputs[train_mask], targets[train_mask], y)
+
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+        if epoch % 1 == 0:  # Validation
+            dur.append(time.time() - t0)
+            loss_test = evaluate_regression_citation(net, inputs, targets, test_mask, loss_fcn, args)
+            print("Epoch {:04d} | Loss {} | Test Loss {} | Time(s) {:.4f}".format(epoch+1, loss.item(), loss_test, np.mean(dur)))
+
+            # early stop
+            if best_loss > loss_test:
+                best_loss = np.min((best_loss, loss_test))
+                cur_step = 0
+            else:
+                cur_step += 1
+                if cur_step == patience:
+                    break
+
+
+def evaluate_degree_regression_citation(model, inputs, targets, mask):
+    # used to evaluate the performance of the model on test dataset
+    model.eval()
+    with torch.no_grad():
+        predicted_degrees = model(inputs)[mask]
+        upper_bound = 1.1*targets[mask]
+        lower_bound = 0.9*targets[mask]
+        acc = torch.sum((predicted_degrees<=upper_bound) & (predicted_degrees>=lower_bound)) / len(targets[mask])
+        return acc
+
+
+def train_degree_regression_citation(net, inputs, targets, train_mask, test_mask, args):
+    path = '../configs/' + args.dataset + '.yaml'
+    config_file = os.path.join(os.getcwd(), path)
+    with open(config_file, 'r') as f:
+        config = yaml.load(f, Loader=yaml.FullLoader)
+
+    lr = config['train_lr']  # learning rate
+    max_epoch = config['train_max_epoch']  # maximal number of training epochs
+    # used for early stop
+    patience = config['train_patience']
+    best_loss = float('inf')
+    cur_step = 0
+
+    optimizer = torch.optim.Adam(net.parameters(), lr=lr)
+    if args.regression_metric == 'l2':
+        loss_fcn = nn.MSELoss()
+    elif args.regression_metric == 'cos':
+        loss_fcn = nn.CosineEmbeddingLoss()
+    dur = []
+
+    for epoch in range(max_epoch):
+        t0 = time.time()
+
+        net.train()
+        predicted_outputs = net(inputs)
+        loss = loss_fcn(predicted_outputs[train_mask], targets[train_mask])
+
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+        if epoch % 1 == 0:  # Validation
+            dur.append(time.time() - t0)
+            acc_test = evaluate_degree_regression_citation(net, inputs, targets, test_mask)
+            print("Epoch {:04d} | Loss {} | Test Accuracy {} | Time(s) {:.4f}".format(epoch+1, loss.item(), acc_test, np.mean(dur)))
+
+            # early stop
+            if best_loss > acc_test:
+                best_loss = np.min((best_loss, acc_test))
+                cur_step = 0
+            else:
+                cur_step += 1
+                if cur_step == patience:
+                    break
 
 
 def evaluate_ppi(model, valid_dataloader, loss_fcn):
@@ -131,83 +251,20 @@ def train_ppi(net, train_dataloader, valid_dataloader):
             loss_list.append(loss.item())
         loss_data = np.array(loss_list).mean()
 
-        if epoch % 1 == 0:  # Validation
-            dur.append(time.time() - t0)
-            mean_score, mean_val_loss = evaluate_ppi(net, valid_dataloader, loss_fcn)
-            print("Epoch {:04d} | Loss {:.4f} | Valid F1-Score {:.4f} | Time(s) {:.4f}".format(epoch + 1, loss_data, mean_score, np.mean(dur)))
-            # early stop
-            if mean_score > best_score or best_loss > mean_val_loss:
-                best_score = np.max((mean_score, best_score))
-                best_loss = np.min((best_loss, mean_val_loss))
-                cur_step = 0
-            else:
-                cur_step += 1
-                if cur_step == patience:
-                    break
-
-
-
-def evaluate_reg_citation(model, input, output, mask, loss_fcn, args):
-    # used to evaluate the performance of the model on test dataset
-    model.eval()
-    with torch.no_grad():
-        predicted_output = model(input)
-        if args.regression_metric == 'l2':
-            loss_test = loss_fcn(predicted_output[mask], output[mask])
-        elif args.regression_metric == 'cos':
-            y = torch.ones(output[mask].shape[0])
-            loss_test = loss_fcn(predicted_output[mask], output[mask],y)
-        return loss_test
-
-
-def train_reg_citation(net, input, output, train_mask, test_mask, args):
-    path = '../configs/' + args.dataset + '.yaml'
-    config_file = os.path.join(os.getcwd(), path)
-    with open(config_file, 'r') as f:
-        config = yaml.load(f, Loader=yaml.FullLoader)
-
-    lr = config['train_lr']  # learning rate
-    max_epoch = config['train_max_epoch']  # maximal number of training epochs
-    # used for early stop
-    patience = config['train_patience']
-    best_loss = float('inf')
-    cur_step = 0
-
-    optimizer = torch.optim.Adam(net.parameters(), lr=lr)
-    if args.regression_metric == 'l2':
-        loss_fcn = nn.MSELoss()
-    elif args.regression_metric == 'cos':
-        loss_fcn = nn.CosineEmbeddingLoss()
-    dur = []
-
-    for epoch in range(max_epoch):
-        t0 = time.time()
-
-        net.train()
-        predicted_output = net(input)
-        if args.regression_metric == 'l2':
-            loss = loss_fcn(predicted_output[train_mask], output[train_mask])
-        elif args.regression_metric == 'cos':
-            y = torch.ones(output[train_mask].shape[0])
-            loss = loss_fcn(predicted_output[train_mask], output[train_mask],y)
-
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-
-        if epoch % 1 == 0:  # Validation
-            dur.append(time.time() - t0)
-            loss_test = evaluate_reg_citation(net, input, output, test_mask, loss_fcn, args)
-            print("Epoch {:04d} | Loss {} | Test Loss {} | Time(s) {:.4f}".format(epoch+1, loss.item(), loss_test, np.mean(dur)))
-
-            # early stop
-            if best_loss > loss_test:
-                best_loss = np.min((best_loss, loss_test))
-                cur_step = 0
-            else:
-                cur_step += 1
-                if cur_step == patience:
-                    break
+        # Validation
+        dur.append(time.time() - t0)
+        mean_score, mean_val_loss = evaluate_ppi(net, valid_dataloader, loss_fcn)
+        print("Epoch {:04d} | Loss {:.4f} | Valid F1-Score {:.4f} | Time(s) {:.4f}".format(epoch + 1, loss_data, mean_score, np.mean(dur)))
+        # early stop
+        if mean_score > best_score or best_loss > mean_val_loss:
+            best_score = np.max((mean_score, best_score))
+            best_loss = np.min((best_loss, mean_val_loss))
+            cur_step = 0
+        else:
+            cur_step += 1
+            if cur_step == patience:
+                break
+    return mean_score
 
 
 
