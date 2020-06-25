@@ -32,7 +32,7 @@ def main(args):
         # load dataset
         print("********** LOAD DATASET **********")
         g, features, labels, train_mask, test_mask = load_dataset(args)
-        nodes_degree = torch.sum(g.adjacency_matrix(transpose=True).to_dense(),dim=1)
+        nodes_degree = torch.sum(g.adjacency_matrix(transpose=True).to_dense(),dim=1).unsqueeze(1)
 
         # build network
         path = '../configs/' + args.dataset + '.yaml'
@@ -125,7 +125,7 @@ def main(args):
                     lower_bound = nodes_degree * 0.9
                     upper_bound = nodes_degree * 1.1
                     recoverable_nodes_indices = (regression_outputs<=upper_bound) & (regression_outputs>=lower_bound)
-                    recoverable_nodes_current_layer.update(nodes_indices[recoverable_nodes_indices])
+                    recoverable_nodes_current_layer.update(nodes_indices[recoverable_nodes_indices.squeeze(dim=1)])
                     num_recoverable = len(recoverable_nodes_current_layer)
 
                     if intermediate_layer == 1:
@@ -199,7 +199,7 @@ if __name__ == '__main__':
     parser.add_argument('--regression_model', default='mlp', help='choose model structure from: slp, mlp')
     parser.add_argument('--regression_metric', default='l2', help='choose metric for regression and nearest neighbour from: l2 or cos')
     parser.add_argument('--knn', type=int, default=1, help='method to find the corresponding node among neighboring nodes after recovery, k=1,2 or 3')
-    parser.add_argument('--repeat_times', type=int, default=3, help='experiment repeating times for single layer')
+    parser.add_argument('--repeat_times', type=int, default=5, help='experiment repeating times for single layer')
     parser.add_argument('--max_gcn_layers', type=int, default=6, help='the maxmal gcn models\'s layer, not larger than 8')
     args = parser.parse_args()
 

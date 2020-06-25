@@ -130,30 +130,31 @@ def train_regression_citation(net, inputs, targets, train_mask, test_mask, args)
         loss.backward()
         optimizer.step()
 
-        if epoch % 1 == 0:  # Validation
-            dur.append(time.time() - t0)
-            loss_test = evaluate_regression_citation(net, inputs, targets, test_mask, loss_fcn, args)
-            print("Epoch {:04d} | Loss {} | Test Loss {} | Time(s) {:.4f}".format(epoch+1, loss.item(), loss_test, np.mean(dur)))
+        # Validation
+        dur.append(time.time() - t0)
+        loss_test = evaluate_regression_citation(net, inputs, targets, test_mask, loss_fcn, args)
+        print("Epoch {:04d} | Loss {} | Test Loss {} | Time(s) {:.4f}".format(epoch+1, loss.item(), loss_test, np.mean(dur)))
 
-            # early stop
-            if best_loss > loss_test:
-                best_loss = np.min((best_loss, loss_test))
-                cur_step = 0
-            else:
-                cur_step += 1
-                if cur_step == patience:
-                    break
+        # early stop
+        if best_loss > loss_test:
+            best_loss = np.min((best_loss, loss_test))
+            cur_step = 0
+        else:
+            cur_step += 1
+            if cur_step == patience:
+                break
 
 
-def evaluate_degree_regression_citation(model, inputs, targets, mask):
+def evaluate_degree_regression_citation(model, inputs, targets, mask, loss_fcn):
     # used to evaluate the performance of the model on test dataset
     model.eval()
     with torch.no_grad():
-        predicted_degrees = model(inputs)[mask]
-        upper_bound = 1.1*targets[mask]
-        lower_bound = 0.9*targets[mask]
-        acc = torch.sum((predicted_degrees<=upper_bound) & (predicted_degrees>=lower_bound)) / len(targets[mask])
-        return acc
+        predicted_degrees = model(inputs)
+        loss = loss_fcn(predicted_degrees[mask], targets[mask])
+        upper_bound = 1.1 * targets[mask]
+        lower_bound = 0.9 * targets[mask]
+        acc = torch.sum((predicted_degrees[mask]<=upper_bound) & (predicted_degrees[mask]>=lower_bound)) * 1.0 / len(targets[mask])
+        return acc, loss
 
 
 def train_degree_regression_citation(net, inputs, targets, train_mask, test_mask, args):
@@ -166,14 +167,12 @@ def train_degree_regression_citation(net, inputs, targets, train_mask, test_mask
     max_epoch = config['train_max_epoch']  # maximal number of training epochs
     # used for early stop
     patience = config['train_patience']
+    best_accuracy = -1
     best_loss = float('inf')
     cur_step = 0
 
     optimizer = torch.optim.Adam(net.parameters(), lr=lr)
-    if args.regression_metric == 'l2':
-        loss_fcn = nn.MSELoss()
-    elif args.regression_metric == 'cos':
-        loss_fcn = nn.CosineEmbeddingLoss()
+    loss_fcn = nn.MSELoss()
     dur = []
 
     for epoch in range(max_epoch):
@@ -187,19 +186,20 @@ def train_degree_regression_citation(net, inputs, targets, train_mask, test_mask
         loss.backward()
         optimizer.step()
 
-        if epoch % 1 == 0:  # Validation
-            dur.append(time.time() - t0)
-            acc_test = evaluate_degree_regression_citation(net, inputs, targets, test_mask)
-            print("Epoch {:04d} | Loss {} | Test Accuracy {} | Time(s) {:.4f}".format(epoch+1, loss.item(), acc_test, np.mean(dur)))
+        # Validation
+        dur.append(time.time() - t0)
+        acc_test, loss_test = evaluate_degree_regression_citation(net, inputs, targets, test_mask, loss_fcn)
+        print("Epoch {:04d} | Loss {} | Test Accuracy {} | Time(s) {:.4f}".format(epoch+1, loss.item(), acc_test, np.mean(dur)))
 
-            # early stop
-            if best_loss > acc_test:
-                best_loss = np.min((best_loss, acc_test))
-                cur_step = 0
-            else:
-                cur_step += 1
-                if cur_step == patience:
-                    break
+        # early stop
+        if acc_test > best_accuracy or best_loss > loss_test:
+            best_accuracy = np.max((acc_test, best_accuracy))
+            best_loss = np.min((best_loss, loss_test))
+            cur_step = 0
+        else:
+            cur_step += 1
+            if cur_step == patience:
+                break
 
 
 def evaluate_ppi(model, valid_dataloader, loss_fcn):
