@@ -273,7 +273,7 @@ def main(args):
                 print("********** EXPERIMENT ITERATION: {} **********".format(repeat_time+1))
                 print("********** GCN MODEL: GCN_{}layer **********".format(gcn_model_layer))
                 print("********** TRAIN GCN NETWORK **********")
-                f1_score = train_ppi(gcn, train_dataloader, valid_dataloader, args)
+                f1_score = train_ppi(gcn, train_dataloader, valid_dataloader)
                 f1_scores[repeat_time, gcn_model_layer - 1] = f1_score
 
                 checkpoint_file_name = 'gcn_' + str(gcn_model_layer) + 'layers_' + args.dataset + '.pkl'
@@ -289,11 +289,11 @@ def main(args):
                     print("********** BUILD REGRESSION MODEL TO RECOVER INPUT FROM EMBEDDING **********")
                     # prepare to build the regression model
                     for data in train_dataset:
-                        data[0].ndata['embedding'] = gcn(data[0], data[0].ndata['feat'].float(), args)[-intermediate_layer].detach()
+                        data[0].ndata['embedding'] = gcn(data[0], data[0].ndata['feat'].float())[-intermediate_layer].detach()
                     for data in valid_dataset:
-                        data[0].ndata['embedding'] = gcn(data[0], data[0].ndata['feat'].float(), args)[-intermediate_layer].detach()
+                        data[0].ndata['embedding'] = gcn(data[0], data[0].ndata['feat'].float())[-intermediate_layer].detach()
                     for data in test_dataset:
-                        data[0].ndata['embedding'] = gcn(data[0], data[0].ndata['feat'].float(), args)[-intermediate_layer].detach()
+                        data[0].ndata['embedding'] = gcn(data[0], data[0].ndata['feat'].float())[-intermediate_layer].detach()
                     regression_in = data[0].ndata['embedding'].shape[1]
                     regression_out = data[0].ndata['feat'].shape[1]
                     regression_h = config['regression_hidden_features_identity']
@@ -326,7 +326,7 @@ def main(args):
                             regression_output = regression_model(graph.ndata['embedding'])
                             for node_ind in range(num_nodes):
                                 neighbour_ind = graph.adjacency_matrix(transpose=True)[node_ind].to_dense() == 1
-                                neighbour_feat = graph.ndata['embedding'][neighbour_ind]
+                                neighbour_feat = graph.ndata['feat'][neighbour_ind]
                                 node_regression_output = regression_output[node_ind]
                                 # Find k Nearest Neighbourhood
                                 if args.regression_metric == 'l2':
