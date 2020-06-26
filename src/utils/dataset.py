@@ -18,13 +18,14 @@ def load_citation(args):
     features = torch.FloatTensor(data.features).to(device)
     labels = torch.LongTensor(data.labels).to(device)
     train_mask = torch.BoolTensor(data.train_mask).to(device)
+    valid_mask = torch.BoolTensor(data.val_mask).to(device)
     test_mask = torch.BoolTensor(data.test_mask).to(device)
     g = data.graph
     # add self loop
     g.remove_edges_from(nx.selfloop_edges(g))
     g = DGLGraph(g)
     g.add_edges(g.nodes(), g.nodes())
-    return g, features, labels, train_mask, test_mask
+    return g, features, labels, train_mask, valid_mask, test_mask
 
 def load_reddit(args):
     data = load_data(args)
@@ -100,8 +101,8 @@ def load_tu(dataset_name, train_ratio, validate_ratio, batch_size):
 def load_dataset(args):
 
     if args.dataset in 'cora, citeseer, pubmed':
-        g, features, labels, train_mask, test_mask = load_citation(args)
-        return g, features, labels, train_mask, test_mask
+        g, features, labels, train_mask, valid_mask, test_mask = load_citation(args)
+        return g, features, labels, train_mask, valid_mask, test_mask
 
     elif args.dataset == 'reddit-self-loop':
         g, features, labels, train_mask, test_mask = load_reddit(args)

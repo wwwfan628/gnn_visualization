@@ -31,7 +31,7 @@ def main(args):
     if args.dataset in 'cora, citeseer, pubmed':
         # load dataset
         print("********** LOAD DATASET **********")
-        g, features, labels, train_mask, test_mask = load_dataset(args)
+        g, features, labels, train_mask, valid_mask, test_mask = load_dataset(args)
         nodes_degree = torch.sum(g.adjacency_matrix(transpose=True).to_dense(),dim=1).unsqueeze(1)
 
         # build network

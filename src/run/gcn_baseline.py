@@ -23,7 +23,7 @@ def main(args):
     # load dataset
     print("********** LOAD DATASET **********")
     if args.dataset in 'cora, reddit-self-loop, citeseer, pubmed':
-        g, features, labels, train_mask, test_mask = load_dataset(args)
+        g, features, labels, train_mask, valid_mask, test_mask = load_dataset(args)
     elif args.dataset == 'ppi':
         train_dataset, valid_dataset, train_dataloader, valid_dataloader = load_dataset(args)
     elif 'tu' in args.dataset:

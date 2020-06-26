@@ -32,7 +32,7 @@ def main(args):
     if args.dataset in 'cora, citeseer, pubmed':
         # load dataset
         print("********** LOAD DATASET **********")
-        g, features, labels, train_mask, test_mask = load_dataset(args)
+        g, features, labels, train_mask, valid_mask, test_mask = load_dataset(args)
 
         # prepare to build network
         path = '../configs/' + args.dataset + '.yaml'
@@ -80,7 +80,7 @@ def main(args):
                 print("********** EXPERIMENT ITERATION: {} **********".format(repeat_time+1))
                 print("********** GCN MODEL: GCN_{}layer **********".format(gcn_model_layer))
                 print("********** TRAIN GCN NETWORK **********")
-                acc = train_citation(gcn, g, features, labels, train_mask, test_mask, args)
+                acc = train_citation(gcn, g, features, labels, train_mask, valid_mask, args)
                 accuracy[repeat_time, gcn_model_layer-1] = acc
                 correct_classified_nodes, incorrect_classified_nodes = classify_nodes_citation(gcn, g, features, labels)
 
