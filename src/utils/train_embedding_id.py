@@ -267,20 +267,23 @@ def train_ppi(net, train_dataloader, valid_dataloader):
     return mean_score
 
 
-
-def evaluate_reg_ppi(model, valid_dataloader, loss_fcn):
+def evaluate_regression_ppi(model, valid_dataloader, loss_fcn, args):
     val_loss_list = []
     for batch, (subgraph, labels) in enumerate(valid_dataloader):
         model.eval()
         with torch.no_grad():
             predicted_output = model(subgraph.ndata['embedding'].float().to(device))
-            loss_data = loss_fcn(predicted_output, subgraph.ndata['feat'].float())
+            if args.regression_metric == 'l2':
+                loss_data = loss_fcn(predicted_output, subgraph.ndata['feat'].float())
+            elif args.regression_metric == 'cos':
+                y = torch.ones(subgraph.ndata['feat'].shape[0])
+                loss_data = loss_fcn(predicted_output, subgraph.ndata['feat'].float(), y)
         val_loss_list.append(loss_data)
     mean_val_loss = np.array(val_loss_list).mean()
     return mean_val_loss
 
 
-def train_reg_ppi(net, train_dataloader, valid_dataloader): #TODO: metric = cos not implemented
+def train_regression_ppi(net, train_dataloader, valid_dataloader, args):
 
     config_file = os.path.join(os.getcwd(), '../configs/ppi.yaml')
     with open(config_file, 'r') as f:
@@ -294,7 +297,10 @@ def train_reg_ppi(net, train_dataloader, valid_dataloader): #TODO: metric = cos 
     cur_step = 0
 
     optimizer = torch.optim.Adam(net.parameters(), lr=lr, weight_decay=0)
-    loss_fcn = nn.MSELoss()
+    if args.regression_metric == 'l2':
+        loss_fcn = nn.MSELoss()
+    elif args.regression_metric == 'cos':
+        loss_fcn = nn.CosineEmbeddingLoss()
     dur = []
 
     for epoch in range(max_epoch):
@@ -304,22 +310,29 @@ def train_reg_ppi(net, train_dataloader, valid_dataloader): #TODO: metric = cos 
         loss_list = []
         for batch, (subgraph, labels) in enumerate(train_dataloader):
             predicted_ouput = net(subgraph.ndata['embedding'].float().to(device))
-            loss = loss_fcn(predicted_ouput, subgraph.ndata['feat'].float())
+            if args.regression_metric == 'l2':
+                loss = loss_fcn(predicted_ouput, subgraph.ndata['feat'].float())
+            elif args.regression_metric == 'cos':
+                y = torch.ones(subgraph.ndata['feat'].shape[0])
+                loss = loss_fcn(predicted_ouput, subgraph.ndata['feat'].float(), y)
+
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
+
             loss_list.append(loss.item())
+
         mean_loss = np.array(loss_list).mean()
 
-        if epoch % 1 == 0:  # Validation
-            dur.append(time.time() - t0)
-            mean_val_loss = evaluate_reg_ppi(net, valid_dataloader, loss_fcn)
-            print("Epoch {:04d} | Loss {} | Valid Loss {} | Time(s) {:.4f}".format(epoch + 1, mean_loss, mean_val_loss, np.mean(dur)))
-            # early stop
-            if  best_loss > mean_val_loss:
-                best_loss = np.min((best_loss, mean_val_loss))
-                cur_step = 0
-            else:
-                cur_step += 1
-                if cur_step == patience:
-                    break
+        # Validation
+        dur.append(time.time() - t0)
+        mean_val_loss = evaluate_regression_ppi(net, valid_dataloader, loss_fcn, args)
+        print("Epoch {:04d} | Loss {} | Valid Loss {} | Time(s) {:.4f}".format(epoch + 1, mean_loss, mean_val_loss, np.mean(dur)))
+        # early stop
+        if best_loss > mean_val_loss:
+            best_loss = np.min((best_loss, mean_val_loss))
+            cur_step = 0
+        else:
+            cur_step += 1
+            if cur_step == patience:
+                break

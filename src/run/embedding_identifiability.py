@@ -1,5 +1,5 @@
 from src.utils.dataset import load_dataset
-from src.utils.train_embedding_id import train_citation, train_ppi, train_regression_citation,train_reg_ppi
+from src.utils.train_embedding_id import train_citation, train_ppi, train_regression_citation,train_regression_ppi
 from src.models.gcn_embedding_id import GCN_2Layers, GCN_3Layers, GCN_4Layers, GCN_5Layers, GCN_6Layers
 from src.models.regression_embedding_id import MLP, SLP
 
@@ -176,7 +176,7 @@ def main(args):
                     if args.dataset in 'cora, reddit-self-loop, citeseer, pubmed':
                         train_regression_citation(reg, embedding, input_features, train_mask, test_mask, args)
                     elif args.dataset == 'ppi':
-                        train_reg_ppi(reg, train_dataloader, valid_dataloader)
+                        train_regression_ppi(reg, train_dataloader, valid_dataloader)
 
                 print("********** GCN MODEL: GCN_{}layer **********".format(gcn_model_layer))
                 print("********** EXPERIMENT ITERATION: {} **********".format(repeat_time+1))

@@ -44,10 +44,12 @@ def collate_ppi(sample):
 def load_ppi(batch_size):
     train_dataset = PPIDataset(mode='train')
     valid_dataset = PPIDataset(mode='valid')
+    test_dataset = PPIDataset(mode='test')
 
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, collate_fn=collate_ppi)
     valid_dataloader = DataLoader(valid_dataset, batch_size=batch_size, collate_fn=collate_ppi)
-    return train_dataset, valid_dataset, train_dataloader, valid_dataloader
+    test_dataloader = DataLoader(test_dataset, batch_size=batch_size, collate_fn=collate_ppi)
+    return train_dataset, valid_dataset, test_dataset, train_dataloader, valid_dataloader, test_dataloader
 
 def collate_tu(batch):
     graphs, labels = map(list, zip(*batch))
@@ -112,8 +114,8 @@ def load_dataset(args):
             config = yaml.load(f, Loader=yaml.FullLoader)
         batch_size = config['batch_size']
 
-        train_dataset, valid_dataset, train_dataloader, valid_dataloader = load_ppi(batch_size)
-        return train_dataset, valid_dataset, train_dataloader, valid_dataloader
+        train_dataset, valid_dataset, test_dataset, train_dataloader, valid_dataloader, test_dataloader = load_ppi(batch_size)
+        return train_dataset, valid_dataset, test_dataset, train_dataloader, valid_dataloader, test_dataloader
 
     elif 'tu' in args.dataset:
 

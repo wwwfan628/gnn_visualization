@@ -1,5 +1,5 @@
 from src.utils.dataset import load_dataset
-from src.utils.train_embedding_id import train_citation, train_ppi, train_degree_regression_citation, train_reg_ppi, classify_nodes_citation
+from src.utils.train_embedding_id import train_citation, train_ppi, train_degree_regression_citation, train_regression_ppi, classify_nodes_citation
 from src.models.gcn_embedding_id import GCN_1Layer,GCN_2Layers,GCN_3Layers,GCN_4Layers,GCN_5Layers,GCN_6Layers,GCN_7Layers,GCN_8Layers
 from src.models.regression_embedding_id import MLP, SLP
 
