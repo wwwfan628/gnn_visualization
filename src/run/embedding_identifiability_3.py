@@ -299,9 +299,9 @@ def main(args):
                     regression_h = config['regression_hidden_features_identity']
 
                     if args.regression_model == 'mlp':
-                        regression_model = MLP(regression_in, regression_h, regression_out)
+                        regression_model = MLP(regression_in, regression_h, regression_out).to(device)
                     elif args.regression_model == 'slp':
-                        regression_model = SLP(regression_in, regression_out)
+                        regression_model = SLP(regression_in, regression_out).to(device)
 
                     print("********** EXPERIMENT ITERATION: {} **********".format(repeat_time + 1))
                     print("********** GCN MODEL: GCN_{}layer **********".format(gcn_model_layer))

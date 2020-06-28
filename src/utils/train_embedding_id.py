@@ -90,7 +90,7 @@ def evaluate_regression_citation(model, inputs, targets, mask, loss_fcn, args):
         if args.regression_metric == 'l2':
             loss_test = loss_fcn(predicted_outputs[mask], targets[mask])
         elif args.regression_metric == 'cos':
-            y = torch.ones(targets[mask].shape[0])
+            y = torch.ones(targets[mask].shape[0]).to(device)
             loss_test = loss_fcn(predicted_outputs[mask], targets[mask], y)
         return loss_test
 
@@ -123,7 +123,7 @@ def train_regression_citation(net, inputs, targets, train_mask, test_mask, args)
         if args.regression_metric == 'l2':
             loss = loss_fcn(predicted_outputs[train_mask], targets[train_mask])
         elif args.regression_metric == 'cos':
-            y = torch.ones(targets[train_mask].shape[0])
+            y = torch.ones(targets[train_mask].shape[0]).to(device)
             loss = loss_fcn(predicted_outputs[train_mask], targets[train_mask], y)
 
         optimizer.zero_grad()
@@ -274,10 +274,10 @@ def evaluate_regression_ppi(model, valid_dataloader, loss_fcn, args):
         with torch.no_grad():
             predicted_output = model(subgraph.ndata['embedding'].float().to(device))
             if args.regression_metric == 'l2':
-                loss_data = loss_fcn(predicted_output, subgraph.ndata['feat'].float())
+                loss_data = loss_fcn(predicted_output, subgraph.ndata['feat'].float().to(device))
             elif args.regression_metric == 'cos':
-                y = torch.ones(subgraph.ndata['feat'].shape[0])
-                loss_data = loss_fcn(predicted_output, subgraph.ndata['feat'].float(), y)
+                y = torch.ones(subgraph.ndata['feat'].shape[0]).to(device)
+                loss_data = loss_fcn(predicted_output, subgraph.ndata['feat'].float().to(device), y)
         val_loss_list.append(loss_data)
     mean_val_loss = np.array(val_loss_list).mean()
     return mean_val_loss
@@ -311,10 +311,10 @@ def train_regression_ppi(net, train_dataloader, valid_dataloader, args):
         for batch, (subgraph, labels) in enumerate(train_dataloader):
             predicted_ouput = net(subgraph.ndata['embedding'].float().to(device))
             if args.regression_metric == 'l2':
-                loss = loss_fcn(predicted_ouput, subgraph.ndata['feat'].float())
+                loss = loss_fcn(predicted_ouput, subgraph.ndata['feat'].float().to(device))
             elif args.regression_metric == 'cos':
-                y = torch.ones(subgraph.ndata['feat'].shape[0])
-                loss = loss_fcn(predicted_ouput, subgraph.ndata['feat'].float(), y)
+                y = torch.ones(subgraph.ndata['feat'].shape[0]).to(device)
+                loss = loss_fcn(predicted_ouput, subgraph.ndata['feat'].float().to(device), y)
 
             optimizer.zero_grad()
             loss.backward()
