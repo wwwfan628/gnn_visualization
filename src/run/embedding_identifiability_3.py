@@ -330,12 +330,12 @@ def main(args):
                                 node_regression_output = regression_output[node_ind]
                                 # Find k Nearest Neighbourhood
                                 if args.regression_metric == 'l2':
-                                    dist = torch.norm(neighbour_feat - node_regression_output, dim=1, p=None)
-                                    nn = dist.topk(args.knn, largest=False)
+                                    dist = torch.norm(neighbour_feat.to(device) - node_regression_output.to(device), dim=1, p=None)
+                                    nn = dist.topk(args.knn, largest=False).to(device)
                                 elif args.regression_metric == 'cos':
                                     node_regression_output = node_regression_output.expand_as(neighbour_feat)
-                                    dist = torch.nn.functional.cosine_similarity(neighbour_feat, node_regression_output)
-                                    nn = dist.topk(args.knn, largest=False)
+                                    dist = torch.nn.functional.cosine_similarity(neighbour_feat.to(device), node_regression_output.to(device))
+                                    nn = dist.topk(args.knn, largest=False).to(device)
                                 # record the index of nn
                                 nn_list[node_ind] = graph.adjacency_matrix(transpose=True)[node_ind]._indices()[0, nn.indices]
                                 print('Node_id: {} | Corresponding NN Node_id: {}'.format(node_ind, nn_list[node_ind]))
