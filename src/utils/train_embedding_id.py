@@ -274,10 +274,10 @@ def evaluate_regression_ppi(model, valid_dataloader, loss_fcn, args):
         with torch.no_grad():
             predicted_output = model(subgraph.ndata['embedding'].float().to(device))
             if args.regression_metric == 'l2':
-                loss_data = loss_fcn(predicted_output, subgraph.ndata['feat'].float().to(device))
+                loss_data = loss_fcn(predicted_output, subgraph.ndata['feat'].float().to(device)).item()
             elif args.regression_metric == 'cos':
                 y = torch.ones(subgraph.ndata['feat'].shape[0]).to(device)
-                loss_data = loss_fcn(predicted_output, subgraph.ndata['feat'].float().to(device), y)
+                loss_data = loss_fcn(predicted_output, subgraph.ndata['feat'].float().to(device), y).item()
         val_loss_list.append(loss_data)
     mean_val_loss = np.array(val_loss_list).mean()
     return mean_val_loss

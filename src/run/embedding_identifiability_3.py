@@ -289,11 +289,11 @@ def main(args):
                     print("********** BUILD REGRESSION MODEL TO RECOVER INPUT FROM EMBEDDING **********")
                     # prepare to build the regression model
                     for data in train_dataset:
-                        data[0].ndata['embedding'] = gcn(data[0], data[0].ndata['feat'].float().to(device))[-intermediate_layer].detach().to(device)
+                        data[0].ndata['embedding'] = gcn(data[0], data[0].ndata['feat'].float().to(device))[-intermediate_layer].clone().detach().to(device)
                     for data in valid_dataset:
-                        data[0].ndata['embedding'] = gcn(data[0], data[0].ndata['feat'].float().to(device))[-intermediate_layer].detach().to(device)
+                        data[0].ndata['embedding'] = gcn(data[0], data[0].ndata['feat'].float().to(device))[-intermediate_layer].clone().detach().to(device)
                     for data in test_dataset:
-                        data[0].ndata['embedding'] = gcn(data[0], data[0].ndata['feat'].float().to(device))[-intermediate_layer].detach().to(device)
+                        data[0].ndata['embedding'] = gcn(data[0], data[0].ndata['feat'].float().to(device))[-intermediate_layer].clone().detach().to(device)
                     regression_in = data[0].ndata['embedding'].shape[1]
                     regression_out = data[0].ndata['feat'].shape[1]
                     regression_h = config['regression_hidden_features_identity']
