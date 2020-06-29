@@ -42,13 +42,14 @@ class Predictor(nn.Module):
         return self.linear2(F.relu(self.linear1(h)))
 
 def update_parameters_subgraph(subg, steady_state_operator, predictor, optimizer):
+    n = subg.layer_size(-1)
     steady_state_operator.train()
     predictor.train()
     steady_state_operator(subg)
     z = predictor(subg.layers[-1].data['h'])
     y_predict = F.log_softmax(z, 1)
     y = subg.layers[-1].data['y']  # label
-    loss = F.nll_loss(y_predict, y)
+    loss = F.nll_loss(y_predict, y) * 1.0 / n
 
     optimizer.zero_grad()
     loss.backward()
@@ -105,8 +106,10 @@ def test(g, test_nodes, predictor):
         z = predictor(g.ndata['h'][test_nodes])
         _, indices = torch.max(z, dim=1)
         y = g.ndata['y'][test_nodes]
-        accuracy = torch.sum(indices == y)*1.0 / len(test_nodes)
-        return accuracy.item(), z
+        accuracy = torch.sum(indices == y) * 1.0 / len(test_nodes)
+        y_predict = F.log_softmax(z, 1)
+        loss = F.nll_loss(y_predict, y) * 1.0
+        return accuracy.item(), loss
 
 def load_citation(args):
     data = load_data(args)
@@ -114,40 +117,51 @@ def load_citation(args):
     labels = torch.LongTensor(data.labels).to(device)
     train_mask = torch.BoolTensor(data.train_mask).to(device)
     test_mask = torch.BoolTensor(data.test_mask).to(device)
+    valid_mask = torch.BoolTensor(data.val_mask).to(device)
     g = data.graph
     # add self loop
     g.remove_edges_from(nx.selfloop_edges(g))
     g = DGLGraph(g)
     g.add_edges(g.nodes(), g.nodes())
-    return g, features, labels, train_mask, test_mask
+    return g, features, labels, train_mask, valid_mask, test_mask
 
 def main(args):
-    subgraph_steady_state_operator = SubgraphSteadyStateOperator(args.n_input,args.n_hidden)
-    predictor = Predictor(args.n_hidden, args.n_output)
-    params = list(subgraph_steady_state_operator.parameters()) + list(predictor.parameters())
-    optimizer = torch.optim.Adam(params, lr=args.lr)
-
     # load dataset
-    g, features, labels, train_mask, test_mask = load_citation(args)
+    g, features, labels, train_mask, valid_mask, test_mask = load_citation(args)
     g.readonly(True)
     g.ndata['x'] = features.clone().detach()
     g.ndata['h'] = torch.zeros((g.number_of_nodes(), args.n_hidden))
     g.ndata['y'] = labels.clone().detach()
-    print('original ndata[x]')
-    print(g.ndata['x'])
 
     nodes_train = np.arange(features.shape[0])[train_mask]
     nodes_test = np.arange(features.shape[0])[test_mask]
 
-    y_bars = []
+    n_input = features.shape[1] * 2 + args.n_hidden
+    n_output = torch.max(labels).item() + 1
+    subgraph_steady_state_operator = SubgraphSteadyStateOperator(n_input, args.n_hidden)
+    predictor = Predictor(args.n_hidden, n_output)
+    params = list(subgraph_steady_state_operator.parameters()) + list(predictor.parameters())
+    optimizer = torch.optim.Adam(params, lr=args.lr)
+
+    best_accuracy = -1
+    best_loss = float('inf')
+    patience = 40
+
     for i in range(args.n_epochs):
         train_on_subgraphs(g, nodes_train, args.batch_size, args.neigh_expand, subgraph_steady_state_operator,
             predictor, optimizer, args.n_embedding_updates, args.n_parameter_updates, args.alpha)
-        accuracy_train, _ = test(g, nodes_train, predictor)
-        accuracy_test, z = test(g, nodes_test, predictor)
+        accuracy_train, loss_train = test(g, nodes_train, predictor)
+        accuracy_test, loss_test = test(g, nodes_test, predictor)
         print("Iter {:05d} | Train acc {:.4f} | Test acc {:.4f}".format(i, accuracy_train, accuracy_test))
-        y_bar = F.log_softmax(z, 1)
-        y_bars.append(y_bar)
+        # early stop
+        if accuracy_test > best_accuracy or best_loss > loss_test:
+            best_accuracy = np.max((accuracy_test, best_accuracy))
+            best_loss = np.min((best_loss, loss_test))
+            cur_step = 0
+        else:
+            cur_step += 1
+            if cur_step == patience:
+                break
 
 
 if __name__ == '__main__':
@@ -158,8 +172,6 @@ if __name__ == '__main__':
     parser.add_argument('--dataset', default='cora', help='choose dataset from: cora, pubmed, citeseer')
     parser.add_argument('--lr', type=float, default=1e-3)
     parser.add_argument('--n_hidden', type=int, default=16)
-    parser.add_argument('--n_input', type=int, default=2882)
-    parser.add_argument('--n_output', type=int, default=7)
     parser.add_argument('--n_epochs', type=int, default=1000)
     parser.add_argument('--n_embedding_updates', type=int, default=8)
     parser.add_argument('--n_parameter_updates', type=int, default=5)

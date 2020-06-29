@@ -6,8 +6,8 @@ import dgl
 import argparse
 from dgl.data import load_data
 from dgl import DGLGraph
-import networkx as nx
 import numpy as np
+import networkx as nx
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print('dataset.py running on {}!'.format(device))
@@ -42,13 +42,14 @@ class Predictor(nn.Module):
         return self.linear2(F.relu(self.linear1(h)))
 
 def update_parameters_fullgraph(g, label_nodes, steady_state_operator, predictor, optimizer):
+    n = len(label_nodes)
     steady_state_operator.train()
     predictor.train()
     steady_state_operator(g)
     z = predictor(g.ndata['h'][label_nodes])
     y_predict = F.log_softmax(z, 1)
     y = g.ndata['y'][label_nodes] # label
-    loss = F.nll_loss(y_predict, y)
+    loss = F.nll_loss(y_predict, y) * 1.0 / n
 
     optimizer.zero_grad()
     loss.backward(retain_graph=True)
@@ -92,29 +93,28 @@ def load_citation(args):
     return g, features, labels, train_mask, test_mask
 
 def main(args):
-    fullgraph_steady_state_operator = FullgraphSteadyStateOperator(args.n_input,args.n_hidden)
-    predictor = Predictor(args.n_hidden, args.n_output)
-    params = list(fullgraph_steady_state_operator.parameters()) + list(predictor.parameters())
-    optimizer = torch.optim.Adam(params, lr=args.lr)
-
     # load dataset
     g, features, labels, train_mask, test_mask = load_citation(args)
     g.ndata['x'] = features.clone().detach()
-    g.ndata['h'] = torch.normal(0, 1, size=(g.number_of_nodes(), args.n_hidden)).requires_grad_(False)
+    g.ndata['h'] = torch.zeros((g.number_of_nodes(), args.n_hidden)).requires_grad_(False)
     g.ndata['y'] = labels.clone().detach()
     g.readonly(True)
     nodes_train = np.arange(features.shape[0])[train_mask]
     nodes_test = np.arange(features.shape[0])[test_mask]
 
-    y_bars = []
+    n_input = features.shape[1]*2+args.n_hidden
+    n_output = torch.max(labels).item() + 1
+    fullgraph_steady_state_operator = FullgraphSteadyStateOperator(n_input, args.n_hidden)
+    predictor = Predictor(args.n_hidden, n_output)
+    params = list(fullgraph_steady_state_operator.parameters()) + list(predictor.parameters())
+    optimizer = torch.optim.Adam(params, lr=args.lr)
+
     for i in range(args.n_epochs):
         loss = train_on_fullgraph(g, nodes_train, fullgraph_steady_state_operator,
             predictor, optimizer, args.n_embedding_updates, args.n_parameter_updates, args.alpha)
         accuracy_train, _ = test(g, nodes_train, predictor)
         accuracy_test, z = test(g, nodes_test, predictor)
         print("Iter {:05d} | Train acc {:.4f} | Test acc {:.4f}".format(i, accuracy_train, accuracy_test))
-        y_bar = F.log_softmax(z, 1)
-        y_bars.append(y_bar)
 
 
 if __name__ == '__main__':
