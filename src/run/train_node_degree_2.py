@@ -1,6 +1,6 @@
 from src.utils.dataset import load_dataset
 from src.utils.train_embedding_id import train_citation
-from src.models.gcn_embedding_id import GCN_1Layer,GCN_2Layers,GCN_3Layers,GCN_4Layers,GCN_5Layers,GCN_6Layers,GCN_7Layers,GCN_8Layers
+from src.models.gcn_embedding_id import GCN_1Layer,GCN_2Layers,GCN_3Layers,GCN_4Layers,GCN_5Layers,GCN_6Layers,GCN_7Layers,GCN_8Layers,GCN_9Layers,GCN_10Layers
 
 import argparse
 import torch
@@ -30,10 +30,9 @@ def main(args):
         # load dataset
         print("********** LOAD DATASET **********")
         g, features, labels, train_mask, valid_mask, test_mask = load_dataset(args)
-        nodes_degree = torch.sum(g.adjacency_matrix(transpose=True).to_dense(), dim=1).unsqueeze(1)
 
         # modify dataset: labels-->degree  features-->constant 1
-        features = torch.rand((g.number_of_nodes(),1))
+        features = torch.ones((g.number_of_nodes(),1))
         labels = torch.sum(g.adjacency_matrix(transpose=True).to_dense(),dim=1).long()-1
         labels[labels>=9] = 9
 
@@ -72,6 +71,10 @@ def main(args):
                     gcn = GCN_7Layers(in_feats, h_feats, out_feats).to(device)
                 elif gcn_model_layer == 8:
                     gcn = GCN_8Layers(in_feats, h_feats, out_feats).to(device)
+                elif gcn_model_layer == 9:
+                    gcn = GCN_9Layers(in_feats, h_feats, out_feats).to(device)
+                elif gcn_model_layer == 10:
+                    gcn = GCN_10Layers(in_feats, h_feats, out_feats).to(device)
 
                 print("********** EXPERIMENT ITERATION: {} **********".format(repeat_time + 1))
                 print("********** GCN MODEL: GCN_{}layer **********".format(gcn_model_layer))
@@ -103,12 +106,12 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Try to find fixpoint")
 
     parser.add_argument('--dataset', default='cora', help='choose dataset from: cora, pubmed, citeseer, ppi')
-    parser.add_argument('--info', default='degree_random2', help='choose the information to recover')
+    parser.add_argument('--info', default='degree_ones', help='choose the information to recover')
     parser.add_argument('--regression_model', default='mlp', help='choose model structure from: slp, mlp')
     parser.add_argument('--regression_metric', default='cos', help='choose metric for regression and nearest neighbour from: l2 or cos')
     parser.add_argument('--knn', type=int, default=1, help='method to find the corresponding node among neighboring nodes after recovery, k=1,2 or 3')
-    parser.add_argument('--repeat_times', type=int, default=5, help='experiment repeating times for single layer')
-    parser.add_argument('--max_gcn_layers', type=int, default=8, help='the maxmal gcn models\'s layer, not larger than 8')
+    parser.add_argument('--repeat_times', type=int, default=10, help='experiment repeating times for single layer')
+    parser.add_argument('--max_gcn_layers', type=int, default=10, help='the maxmal gcn models\'s layer, not larger than 8')
     args = parser.parse_args()
 
     print(args)

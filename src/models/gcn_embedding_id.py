@@ -136,3 +136,57 @@ class GCN_8Layers(nn.Module):
         h7 = F.relu(self.gcn_layer7(graph, h6))
         h8 = self.gcn_layer8(graph, h7)
         return h8, h7, h6, h5, h4, h3, h2, h1
+
+
+class GCN_9Layers(nn.Module):
+    def __init__(self,in_feats,h_feats,out_feats):
+        super(GCN_9Layers, self).__init__()
+        self.gcn_layer1 = GraphConv(in_feats, h_feats)
+        self.gcn_layer2 = GraphConv(h_feats, h_feats)
+        self.gcn_layer3 = GraphConv(h_feats, h_feats)
+        self.gcn_layer4 = GraphConv(h_feats, h_feats)
+        self.gcn_layer5 = GraphConv(h_feats, h_feats)
+        self.gcn_layer6 = GraphConv(h_feats, h_feats)
+        self.gcn_layer7 = GraphConv(h_feats, h_feats)
+        self.gcn_layer8 = GraphConv(h_feats, h_feats)
+        self.gcn_layer9 = GraphConv(h_feats, out_feats)
+
+    def forward(self, graph, inputs):
+        h1 = F.relu(self.gcn_layer1(graph, inputs))
+        h2 = F.relu(self.gcn_layer2(graph, h1))
+        h3 = F.relu(self.gcn_layer3(graph, h2))
+        h4 = F.relu(self.gcn_layer4(graph, h3))
+        h5 = F.relu(self.gcn_layer5(graph, h4))
+        h6 = F.relu(self.gcn_layer6(graph, h5))
+        h7 = F.relu(self.gcn_layer7(graph, h6))
+        h8 = F.relu(self.gcn_layer8(graph, h7))
+        h9 = self.gcn_layer9(graph, h8)
+        return h9, h8, h7, h6, h5, h4, h3, h2, h1
+
+
+class GCN_10Layers(nn.Module):
+    def __init__(self,in_feats,h_feats,out_feats):
+        super(GCN_10Layers, self).__init__()
+        self.gcn_layer1 = GraphConv(in_feats, h_feats)
+        self.gcn_layer2 = GraphConv(h_feats, h_feats)
+        self.gcn_layer3 = GraphConv(h_feats, h_feats)
+        self.gcn_layer4 = GraphConv(h_feats, h_feats)
+        self.gcn_layer5 = GraphConv(h_feats, h_feats)
+        self.gcn_layer6 = GraphConv(h_feats, h_feats)
+        self.gcn_layer7 = GraphConv(h_feats, h_feats)
+        self.gcn_layer8 = GraphConv(h_feats, h_feats)
+        self.gcn_layer9 = GraphConv(h_feats, h_feats)
+        self.gcn_layer10 = GraphConv(h_feats, out_feats)
+
+    def forward(self, graph, inputs):
+        h1 = F.relu(self.gcn_layer1(graph, inputs))
+        h2 = F.relu(self.gcn_layer2(graph, h1))
+        h3 = F.relu(self.gcn_layer3(graph, h2))
+        h4 = F.relu(self.gcn_layer4(graph, h3))
+        h5 = F.relu(self.gcn_layer5(graph, h4))
+        h6 = F.relu(self.gcn_layer6(graph, h5))
+        h7 = F.relu(self.gcn_layer7(graph, h6))
+        h8 = F.relu(self.gcn_layer8(graph, h7))
+        h9 = F.relu(self.gcn_layer9(graph, h8))
+        h10 = self.gcn_layer10(graph, h9)
+        return h10, h9, h8, h7, h6, h5, h4, h3, h2, h1
