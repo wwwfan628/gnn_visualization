@@ -1,11 +1,10 @@
 from src.utils.dataset import load_dataset
-from src.utils.train_embedding_id import train_citation, train_degree_regression_citation, classify_nodes_citation, train_degree_claasification_citation
+from src.utils.train_embedding_id import train_citation, train_degree_regression_citation, classify_nodes_citation
 from src.models.gcn_embedding_id import GCN_1Layer,GCN_2Layers,GCN_3Layers,GCN_4Layers,GCN_5Layers,GCN_6Layers,GCN_7Layers,GCN_8Layers
 from src.models.regression_embedding_id import MLP, SLP
 
 import argparse
 import torch
-import torch.nn.functional as F
 import os
 import yaml
 import pandas as pd
@@ -33,19 +32,21 @@ def main(args):
         # load dataset
         print("********** LOAD DATASET **********")
         g, features, labels, train_mask, valid_mask, test_mask = load_dataset(args)
-        nodes_degree_regression = torch.sum(g.adjacency_matrix(transpose=True).to_dense(),dim=1).unsqueeze(1)
-        nodes_degree_classification = torch.sum(g.adjacency_matrix(transpose=True).to_dense(), dim=1).long()-1
-        nodes_degree_classification[nodes_degree_classification>=9]=9
+        nodes_degree = torch.sum(g.adjacency_matrix(transpose=True).to_dense(), dim=1).unsqueeze(1)
 
-        # build network
+        # modify dataset: labels-->degree  features-->constant 1
+        features = torch.ones((g.number_of_nodes(),1))
+        labels = torch.sum(g.adjacency_matrix(transpose=True).to_dense(),dim=1).long()-1
+        labels[labels>=9] = 9
+
+        # prepare to build network
         path = '../configs/' + args.dataset + '.yaml'
         config_file = os.path.join(os.getcwd(), path)
         with open(config_file, 'r') as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
         h_feats = config['hidden_features']
-
         in_feats = features.shape[1]
-        out_feats = torch.max(labels).item() + 1
+        out_feats = torch.max(labels).item()+1
 
         # result before averaging over experiments'iterations
         # store 'recoverability rates'/'repeating rates' for differnt iterations/layers/models
@@ -59,8 +60,8 @@ def main(args):
         relationship_rec_acc = np.zeros([args.repeat_times, args.max_gcn_layers, 4])
 
         for repeat_time in np.arange(args.repeat_times):
-            for gcn_model_layer in np.arange(1, args.max_gcn_layers+1):
-                print("********** EXPERIMENT ITERATION: {} **********".format(repeat_time+1))
+            for gcn_model_layer in np.arange(1, args.max_gcn_layers + 1):
+                print("********** EXPERIMENT ITERATION: {} **********".format(repeat_time + 1))
                 print("********** GCN MODEL: GCN_{}layers **********".format(gcn_model_layer))
                 print("********** BUILD GCN NETWORK**********")
                 if gcn_model_layer == 1:
@@ -80,11 +81,11 @@ def main(args):
                 elif gcn_model_layer == 8:
                     gcn = GCN_8Layers(in_feats, h_feats, out_feats).to(device)
 
-                print("********** EXPERIMENT ITERATION: {} **********".format(repeat_time+1))
+                print("********** EXPERIMENT ITERATION: {} **********".format(repeat_time + 1))
                 print("********** GCN MODEL: GCN_{}layer **********".format(gcn_model_layer))
                 print("********** TRAIN GCN NETWORK **********")
                 acc = train_citation(gcn, g, features, labels, train_mask, test_mask, args)
-                accuracy[repeat_time, gcn_model_layer-1] = acc
+                accuracy[repeat_time, gcn_model_layer - 1] = acc
                 correct_classified_nodes, incorrect_classified_nodes = classify_nodes_citation(gcn, g, features, labels)
 
                 checkpoint_file_name = 'gcn_' + str(gcn_model_layer) + 'layers_' + args.dataset + '.pkl'
@@ -95,58 +96,42 @@ def main(args):
                 print("********** GCN MODEL: GCN_{}layer **********".format(gcn_model_layer))
                 recoverable_nodes_1layer = set()  # store nodes that can be identified after 1st layer
                 recoverable_nodes_last_layer = set()  # store nodes that can be identified after last layer
-                for intermediate_layer in np.arange(1, gcn_model_layer+1):
+                for intermediate_layer in np.arange(1, gcn_model_layer + 1):
                     recoverable_nodes_current_layer = set()  # store nodes that can be identified after current layer
                     print("********** INTERMEDIATE LAYER: {} **********".format(intermediate_layer))
-                    print("********** BUILD MODEL TO RECOVER INPUT FROM EMBEDDING **********")
-                    if 'regression' in args.recovery_problem:
-                        # prepare to build the regression model
-                        embedding = gcn(g, features)[-intermediate_layer].clone().detach().to(device)
-                        recovery_in = embedding.shape[1]
-                        recovery_out = 1
-                        recovery_h = config['regression_hidden_features_degree']
-                    elif 'classification' in args.recovery_problem:
-                        # prepare to build the regression model
-                        embedding = gcn(g, features)[-intermediate_layer].clone().detach().to(device)
-                        recovery_in = embedding.shape[1]
-                        recovery_out = torch.max(nodes_degree_classification).item()+1
-                        recovery_h = config['regression_hidden_features_degree']
+                    print("********** BUILD REGRESSION MODEL TO RECOVER INPUT FROM EMBEDDING **********")
+                    # prepare to build the regression model
+                    embedding = gcn(g, features)[-intermediate_layer].clone().detach().to(device)
+                    regression_in = embedding.shape[1]
+                    regression_out = 1
+                    regression_h = config['regression_hidden_features_degree']
 
-                    if args.recovery_model == 'mlp':
-                        recovery_model = MLP(recovery_in, recovery_h, recovery_out)
-                    elif args.recovery_model == 'slp':
-                        recovery_model = SLP(recovery_in, recovery_out)
+                    if args.regression_model == 'mlp':
+                        regression_model = MLP(regression_in, regression_h, regression_out)
+                    elif args.regression_model == 'slp':
+                        regression_model = SLP(regression_in, regression_out)
 
                     print("********** EXPERIMENT ITERATION: {} **********".format(repeat_time + 1))
                     print("********** GCN MODEL: GCN_{}layer **********".format(gcn_model_layer))
                     print("********** INTERMEDIATE LAYER: {} **********".format(intermediate_layer))
-                    print("********** TRAIN MODEL TO RECOVER INPUT FROM EMBEDDING **********")
-                    if 'regression' in args.recovery_problem:
-                        train_degree_regression_citation(recovery_model, embedding, nodes_degree_regression, train_mask, test_mask, args)
-                    elif 'classification' in args.recovery_problem:
-                        train_degree_claasification_citation(recovery_model, embedding, nodes_degree_classification, train_mask, test_mask, args)
+                    print("********** TRAIN REGRESSION MODEL TO RECOVER INPUT FROM EMBEDDING **********")
+                    train_degree_regression_citation(regression_model, embedding, nodes_degree, train_mask, test_mask,
+                                                     args)
 
                     print("********** EXPERIMENT ITERATION: {} **********".format(repeat_time + 1))
                     print("********** GCN MODEL: GCN_{}layer **********".format(gcn_model_layer))
                     print("********** INTERMEDIATE LAYER: {} **********".format(intermediate_layer))
                     print("********** COMPUTE IDENTIFIABILITY/REPEATING RATES **********")
-                    if 'regression' in args.recovery_problem:
-                        # compute number of identifiable nodes
-                        num_nodes = g.number_of_nodes()
-                        nodes_indices = np.arange(num_nodes)
-                        regression_outputs = recovery_model(embedding)
-                        lower_bound = nodes_degree_regression * 0.9
-                        upper_bound = nodes_degree_regression * 1.1
-                        recoverable_nodes_indices = (regression_outputs<=upper_bound) & (regression_outputs>=lower_bound)
-                        recoverable_nodes_current_layer.update(nodes_indices[recoverable_nodes_indices.squeeze(dim=1)])
-                        num_recoverable = len(recoverable_nodes_current_layer)
-                    elif 'classification' in args.recovery_problem:
-                        num_nodes = g.number_of_nodes()
-                        nodes_indices = np.arange(num_nodes)
-                        classification_outputs = recovery_model(embedding)
-                        _, indices = torch.max(classification_outputs, dim=1)
-                        recoverable_nodes_current_layer.update(nodes_indices[indices == nodes_degree_classification])
-                        num_recoverable = len(recoverable_nodes_current_layer)
+                    regression_outputs = regression_model(embedding)
+                    # compute number of identifiable nodes
+                    num_nodes = g.number_of_nodes()
+                    nodes_indices = np.arange(num_nodes)
+                    lower_bound = nodes_degree * 0.9
+                    upper_bound = nodes_degree * 1.1
+                    recoverable_nodes_indices = (regression_outputs <= upper_bound) & (
+                                regression_outputs >= lower_bound)
+                    recoverable_nodes_current_layer.update(nodes_indices[recoverable_nodes_indices.squeeze(dim=1)])
+                    num_recoverable = len(recoverable_nodes_current_layer)
 
                     if intermediate_layer == 1:
                         recoverable_nodes_1layer.update(recoverable_nodes_current_layer)
@@ -155,29 +140,34 @@ def main(args):
                         recoverable_nodes_last_layer.update(recoverable_nodes_current_layer)
                         nodes = set(nodes_indices)
                         nonrecoverable_nodes_last_layer = nodes.difference(recoverable_nodes_last_layer)
-                        positive_positive = len(recoverable_nodes_last_layer.intersection(correct_classified_nodes))*1.0/num_nodes
-                        positive_negative = len(recoverable_nodes_last_layer.intersection(incorrect_classified_nodes))*1.0/num_nodes
-                        negative_positive = len(nonrecoverable_nodes_last_layer.intersection(correct_classified_nodes))*1.0/num_nodes
-                        negative_negative = len(nonrecoverable_nodes_last_layer.intersection(incorrect_classified_nodes))*1.0/num_nodes
+                        positive_positive = len(
+                            recoverable_nodes_last_layer.intersection(correct_classified_nodes)) * 1.0 / num_nodes
+                        positive_negative = len(
+                            recoverable_nodes_last_layer.intersection(incorrect_classified_nodes)) * 1.0 / num_nodes
+                        negative_positive = len(
+                            nonrecoverable_nodes_last_layer.intersection(correct_classified_nodes)) * 1.0 / num_nodes
+                        negative_negative = len(
+                            nonrecoverable_nodes_last_layer.intersection(incorrect_classified_nodes)) * 1.0 / num_nodes
                         print('++ = {} %'.format(positive_positive * 100))
                         print('+- = {} %'.format(positive_negative * 100))
                         print('-+ = {} %'.format(negative_positive * 100))
                         print('-- = {} %'.format(negative_negative * 100))
-                        relationship_rec_acc[repeat_time, gcn_model_layer - 1, :] = np.array([positive_positive, positive_negative, negative_positive, negative_negative])
+                        relationship_rec_acc[repeat_time, gcn_model_layer - 1, :] = np.array(
+                            [positive_positive, positive_negative, negative_positive, negative_negative])
 
                     # compute number of repeating nodes
                     num_repeating = len(recoverable_nodes_current_layer.intersection(recoverable_nodes_1layer))
 
                     recoverability_rate = num_recoverable * 1.0 / num_nodes
-                    if len(recoverable_nodes_1layer)!=0:
-                        repeating_rate = num_repeating * 1.0 / len(recoverable_nodes_1layer)
+                    if len(recoverable_nodes_current_layer) != 0:
+                        repeating_rate = num_repeating * 1.0 / len(recoverable_nodes_current_layer)
                     else:
                         repeating_rate = 0.0
-                    print('recoverability_rate = {} %'.format(recoverability_rate*100))
+                    print('recoverability_rate = {} %'.format(recoverability_rate * 100))
                     print('node_repeatability_rate = {} %'.format(repeating_rate * 100))
 
-                    recoverability_rates[repeat_time, intermediate_layer-1, gcn_model_layer-1] = recoverability_rate
-                    repeating_rates[repeat_time, intermediate_layer-1, gcn_model_layer-1] = repeating_rate
+                    recoverability_rates[repeat_time, intermediate_layer - 1, gcn_model_layer - 1] = recoverability_rate
+                    repeating_rates[repeat_time, intermediate_layer - 1, gcn_model_layer - 1] = repeating_rate
 
         print("********** SAVE RESULT **********")
         # final result
@@ -190,16 +180,19 @@ def main(args):
             else:
                 model_name = 'gcn_' + str(gcn_model_layer) + 'layers'
             models.append(model_name)
-        recoverability_rates_df = pd.DataFrame(np.mean(recoverability_rates, axis=0), index=np.arange(1, args.max_gcn_layers + 1), columns=models)
-        repeating_rates_df = pd.DataFrame(np.mean(repeating_rates, axis=0), index=np.arange(1, args.max_gcn_layers + 1), columns=models)
+        recoverability_rates_df = pd.DataFrame(np.mean(recoverability_rates, axis=0),
+                                               index=np.arange(1, args.max_gcn_layers + 1), columns=models)
+        repeating_rates_df = pd.DataFrame(np.mean(repeating_rates, axis=0), index=np.arange(1, args.max_gcn_layers + 1),
+                                          columns=models)
         accuracy_df = pd.DataFrame(np.mean(accuracy, axis=0), index=models, columns=['accuracy'])
-        relationship_rec_acc_df = pd.DataFrame(np.mean(relationship_rec_acc, axis=0), index=models, columns=['++', '+-', '-+', '--'])
+        relationship_rec_acc_df = pd.DataFrame(np.mean(relationship_rec_acc, axis=0), index=models,
+                                               columns=['++', '+-', '-+', '--'])
 
         # save result in csv files
-        save_subpath = 'recoverability_rates_' + args.dataset + '_'+ str(args.knn) + '-nn' + '.csv'
+        save_subpath = 'recoverability_rates_' + args.dataset + '_' + str(args.knn) + '-nn' + '.csv'
         save_path = os.path.join(outputs_subdir, save_subpath)
         recoverability_rates_df.to_csv(save_path)
-        save_subpath = 'repeating_rates_' + args.dataset + '_' + str(args.knn) +'-nn' + '.csv'
+        save_subpath = 'repeating_rates_' + args.dataset + '_' + str(args.knn) + '-nn' + '.csv'
         save_path = os.path.join(outputs_subdir, save_subpath)
         repeating_rates_df.to_csv(save_path)
         save_subpath = 'accuracy_' + args.dataset + '_' + str(args.knn) + '-nn' + '.csv'
@@ -215,13 +208,12 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Try to find fixpoint")
 
     parser.add_argument('--dataset', default='cora', help='choose dataset from: cora, pubmed, citeseer, ppi')
-    parser.add_argument('--info', default='degree_classification', help='choose the information to recover from self-identity, neighbour-identity, self-identity30, or neighbour-identity30')
-    parser.add_argument('--recovery_model', default='mlp', help='choose model structure from: slp, mlp')
-    parser.add_argument('--recovery_problem', default='classification', help='node degree\'s recovery should be seen as: regression or claasification problem')
-    parser.add_argument('--regression_metric', default='l2', help='choose metric for regression and nearest neighbour from: l2 or cos')
+    parser.add_argument('--info', default='degree', help='choose the information to recover')
+    parser.add_argument('--regression_model', default='mlp', help='choose model structure from: slp, mlp')
+    parser.add_argument('--regression_metric', default='cos', help='choose metric for regression and nearest neighbour from: l2 or cos')
     parser.add_argument('--knn', type=int, default=1, help='method to find the corresponding node among neighboring nodes after recovery, k=1,2 or 3')
     parser.add_argument('--repeat_times', type=int, default=5, help='experiment repeating times for single layer')
-    parser.add_argument('--max_gcn_layers', type=int, default=6, help='the maxmal gcn models\'s layer, not larger than 8')
+    parser.add_argument('--max_gcn_layers', type=int, default=8, help='the maxmal gcn models\'s layer, not larger than 8')
     args = parser.parse_args()
 
     print(args)

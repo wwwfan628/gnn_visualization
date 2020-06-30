@@ -202,6 +202,67 @@ def train_degree_regression_citation(net, inputs, targets, train_mask, test_mask
                 break
 
 
+def evaluate_degree_classification_citation(model, inputs, targets, mask):
+    # used to evaluate the performance of the model on test dataset
+    model.eval()
+    with torch.no_grad():
+        logits = model(inputs)
+        logp = F.log_softmax(logits, 1)
+        loss_test = F.nll_loss(logp[mask], targets[mask])
+        logits = logits[mask]
+        targets = targets[mask]
+        _, indices = torch.max(logits, dim=1)
+        correct = torch.sum(indices == targets)
+        acc = correct.item() * 1.0 / len(targets)
+        return acc, loss_test
+
+
+def train_degree_claasification_citation(net, inputs, targets, train_mask, test_mask, args):
+    path = '../configs/' + args.dataset + '.yaml'
+    config_file = os.path.join(os.getcwd(), path)
+    with open(config_file, 'r') as f:
+        config = yaml.load(f, Loader=yaml.FullLoader)
+
+    lr = config['train_lr']  # learning rate
+    max_epoch = config['train_max_epoch']  # maximal number of training epochs
+    # used for early stop
+    patience = config['train_patience']
+    best_accuracy = -1
+    best_loss = float('inf')
+    cur_step = 0
+
+    optimizer = torch.optim.Adam(net.parameters(), lr=lr)
+    dur = []
+
+    for epoch in range(max_epoch):
+        t0 = time.time()
+
+        net.train()
+        logits = net(inputs)
+        logp = F.log_softmax(logits, 1)
+        loss = F.nll_loss(logp[train_mask], targets[train_mask])
+
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+        # validation
+        dur.append(time.time() - t0)
+        acc, loss_test = evaluate_degree_classification_citation(net, inputs, targets, test_mask)
+        print("Epoch {:04d} | Loss {:.4f} | Test Acc {:.4f} | Time(s) {:.4f}".format(epoch+1, loss.item(), acc, np.mean(dur)))
+
+        # early stop
+        if acc > best_accuracy or best_loss > loss_test:
+            best_accuracy = np.max((acc, best_accuracy))
+            best_loss = np.min((best_loss, loss_test))
+            cur_step = 0
+        else:
+            cur_step += 1
+            if cur_step == patience:
+                break
+    return acc
+
+
 def evaluate_ppi(model, valid_dataloader, loss_fcn):
     score_list = []
     val_loss_list = []
