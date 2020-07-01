@@ -83,8 +83,10 @@ def main(args):
                 gcn.eval()
                 embedding_last_layer = gcn(g,inputs)[0]
                 inputs_gradient = np.zeros([embedding_last_layer.shape[1], inputs.shape[0], inputs.shape[1]])
-                nodes_contributing_most = np.zeros(g.number_of_nodes())
+                n_hop_neighbourhoods_contributing_most = np.zeros(g.number_of_nodes())
                 for node_id in range(embedding_last_layer.shape[0]):
+                    # store contribution of n-hop neighbourhoods
+                    contribution_hop = np.zeros(args.max_gcn_layer+1)
                     # compute gradient for embedding[embedding_node_id,:] wrt inputs[input_node_id,:]
                     for embedding_col_id in range(embedding_last_layer.shape[1]):
                         gradients = torch.zeros(embedding_last_layer.shape).float().to(device)
@@ -93,20 +95,25 @@ def main(args):
                         inputs_gradient[embedding_col_id,:,:] = inputs.grad
                         inputs.grad.data.zero_() # set gradient to 0
                     inputs_contribution_denormalized = np.linalg.norm(inputs_gradient,axis=(0,2),ord='fro')
-                    nodes_contributing_most[node_id] = np.argmax(inputs_contribution_denormalized)
-                    self_contribution_normalized = inputs_contribution_denormalized[node_id] / np.sum(inputs_contribution_denormalized)
-                    print('Embedding node id {} | Self Contribution {} | Max Cotributed Input Node {} '.format(node_id, self_contribution_normalized, nodes_contributing_most[node_id]))
+                    inputs_contribution_normalized = inputs_contribution_denormalized / np.sum(inputs_contribution_denormalized)
+                    print('Embedding node id {} | Self Contribution {} | Max Cotributed Input Node {} '.format(node_id, self_contribution_normalized, nodes_attr_most[node_id]))
+
+                    # BFS find n-hop neighbourhoods
+                    neighbour_list = list(dgl.bfs_nodes_generator(g, node_id))
+                    for hop_ind in np.arange(args.max_gcn_layer+1):
+                        contribution_hop[hop_ind] = np.sum(inputs_contribution_normalized[neighbour_list[hop_ind]])
+
+                    n_hop_neighbourhoods_contributing_most[node_id] = np.argmax(contribution_hop)
 
                 print("********** GCN MODEL: GCN_{}layer **********".format(gcn_layer))
-                print("********** DISTANCE BETWEEN NODE AND NODE ATTRIBUTING AT MOST **********")
+                print("********** COMPUTE RELATIONSHIP BETWEEN CONTRIBUTION AND ACCURACY **********")
                 nodes_classified_by_node_attributing_at_most = []
                 for hop_ind in np.arange(args.max_gcn_layer+1):
                     nodes_classified_by_node_attributing_at_most.append([]) # stores nodes, whose node attributing at most belongs to i-hop neighbourhoods
 
                 for node_id in range(embedding_last_layer.shape[0]):
-                    neighbour_list = list(dgl.bfs_nodes_generator(g, node_id))
                     for hop_ind in np.arange(args.max_gcn_layer+1):
-                        if nodes_contributing_most[node_id] in neighbour_list[hop_ind]:
+                        if n_hop_neighbourhoods_contributing_most[node_id] == hop_ind:
                             nodes_classified_by_node_attributing_at_most[hop_ind].append(node_id)
                             break
                         if hop_ind == args.max_gcn_layer:
@@ -153,7 +160,7 @@ if __name__ == '__main__':
     parser.add_argument('--dataset', default='cora', help='choose dataset from: cora, reddit-self-loop, ppi, aids, reddit-binary and imdb-binary')
     parser.add_argument('--max_gcn_layer', type=int, default=8, help='choose max GCN model layers smaller than 10')
     parser.add_argument('--repeat_time', type=int, default=1, help='repeating time of experiments')
-    parser.add_argument('--save_dir_name', default='contribution_most_node', help='saving directory\'s name')
+    parser.add_argument('--save_dir_name', default='contribution_sum_of_neighbourhoods', help='saving directory\'s name')
     args = parser.parse_args()
 
     print(args)
