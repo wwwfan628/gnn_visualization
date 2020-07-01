@@ -83,7 +83,7 @@ def main(args):
                 gcn.eval()
                 embedding_last_layer = gcn(g,inputs)[0]
                 inputs_gradient = np.zeros([embedding_last_layer.shape[1], inputs.shape[0], inputs.shape[1]])
-                n_hop_neighbourhoods_contributing_most = np.zeros(g.number_of_nodes())
+                n_hop_neighbourhoods_contributing_most = np.zeros(g.number_of_nodes(),dtype=int)
                 for node_id in range(embedding_last_layer.shape[0]):
                     # store contribution of n-hop neighbourhoods
                     contribution_hop = np.zeros(args.max_gcn_layer+1)
@@ -96,14 +96,18 @@ def main(args):
                         inputs.grad.data.zero_() # set gradient to 0
                     inputs_contribution_denormalized = np.linalg.norm(inputs_gradient,axis=(0,2),ord='fro')
                     inputs_contribution_normalized = inputs_contribution_denormalized / np.sum(inputs_contribution_denormalized)
-                    print('Embedding node id {} | Self Contribution {} | Max Cotributed Input Node {} '.format(node_id, self_contribution_normalized, nodes_attr_most[node_id]))
 
                     # BFS find n-hop neighbourhoods
                     neighbour_list = list(dgl.bfs_nodes_generator(g, node_id))
-                    for hop_ind in np.arange(args.max_gcn_layer+1):
-                        contribution_hop[hop_ind] = np.sum(inputs_contribution_normalized[neighbour_list[hop_ind]])
+                    if len(neighbour_list)<=args.max_gcn_layer:
+                        for hop_ind in np.arange(len(neighbour_list)):
+                            contribution_hop[hop_ind] = np.sum(inputs_contribution_normalized[neighbour_list[hop_ind]])
+                    else:
+                        for hop_ind in np.arange(args.max_gcn_layer+1):
+                            contribution_hop[hop_ind] = np.sum(inputs_contribution_normalized[neighbour_list[hop_ind]])
 
                     n_hop_neighbourhoods_contributing_most[node_id] = np.argmax(contribution_hop)
+                    print('Embedding node id {} | Max Cotributed Neighbourhoods {}-hop | Contribution {} '.format(node_id,n_hop_neighbourhoods_contributing_most[node_id],contribution_hop[n_hop_neighbourhoods_contributing_most[node_id]]))
 
                 print("********** GCN MODEL: GCN_{}layer **********".format(gcn_layer))
                 print("********** COMPUTE RELATIONSHIP BETWEEN CONTRIBUTION AND ACCURACY **********")
