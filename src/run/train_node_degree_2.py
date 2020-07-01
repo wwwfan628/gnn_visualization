@@ -32,7 +32,7 @@ def main(args):
         g, features, labels, train_mask, valid_mask, test_mask = load_dataset(args)
 
         # modify dataset: labels-->degree  features-->constant 1
-        features = torch.ones((g.number_of_nodes(),1))
+        features = torch.rand((g.number_of_nodes(),1))
         labels = torch.sum(g.adjacency_matrix(transpose=True).to_dense(),dim=1).long()-1
         labels[labels>=9] = 9
 
@@ -106,7 +106,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Try to find fixpoint")
 
     parser.add_argument('--dataset', default='cora', help='choose dataset from: cora, pubmed, citeseer, ppi')
-    parser.add_argument('--info', default='degree_ones', help='choose the information to recover')
+    parser.add_argument('--info', default='degree_random', help='choose the information to recover')
     parser.add_argument('--regression_model', default='mlp', help='choose model structure from: slp, mlp')
     parser.add_argument('--regression_metric', default='cos', help='choose metric for regression and nearest neighbour from: l2 or cos')
     parser.add_argument('--knn', type=int, default=1, help='method to find the corresponding node among neighboring nodes after recovery, k=1,2 or 3')
