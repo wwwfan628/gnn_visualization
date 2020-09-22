@@ -1,0 +1,37 @@
+# Configuration file for dataset coauthors cs
+
+# model
+hidden_features: 64
+
+# training
+train_lr: 0.001
+train_max_epoch: 1000
+train_patience: 10
+
+# checkpoint available
+model_parameter_path:
+
+# optimization
+graph_optimization:
+  optimize_lr: 0.005
+  optimize_max_epoch: 1000000
+  optimize_tolerance: 0.001
+
+node_optimization:
+  optimize_lr: 0.005
+  optimize_max_epoch: 10000
+  optimize_tolerance: 0.1
+
+# Newton's method
+newton_method:
+  max_epoch: 500
+  tolerance: 0.001
+
+# Broyden's method
+broyden_method:
+  max_epoch: 500
+  tolerance: 0.001
+
+# Embedding Identifiability
+regression_hidden_features_identity: 256
+regression_hidden_features_degree: 64

@@ -1,6 +1,7 @@
 from dgl.data import load_data
 from dgl.data import PPIDataset
 from dgl.data import TUDataset
+from dgl.data.gnn_benckmark import Coauthor, AmazonCoBuy
 import dgl
 from dgl import DGLGraph
 import numpy as np
@@ -26,6 +27,45 @@ def load_citation(args):
     g = DGLGraph(g)
     g.add_edges(g.nodes(), g.nodes())
     return g, features, labels, train_mask, valid_mask, test_mask
+
+def index_to_mask(index_set, size):
+    mask = torch.zeros(size, dtype=torch.bool)
+    index = np.array(list(index_set))
+    mask[index] = 1
+    return mask
+
+def load_amz_coauthors(args):
+    # Set random coauthor/co-purchase splits:
+    # 20 per class for training
+    # 30 per classes for validation
+    # rest labels for testing
+    if 'amazon' in args.dataset:
+        name = args.dataset.split('_')[-1]
+        dataset = AmazonCoBuy(name)
+    elif 'coauthors' in args.dataset:
+        name = args.dataset.split('_')[-1]
+        dataset = Coauthor(name)
+    g = dataset.data[0]
+    features = torch.FloatTensor(g.ndata['feat'])
+    labels = torch.LongTensor(g.ndata['label'])
+
+    indices = []
+    num_classes = torch.max(labels).item() + 1
+    for i in range(num_classes):
+        index = (labels == i).nonzero().view(-1)
+        index = index[torch.randperm(index.size(0))]
+        indices.append(index)
+
+    train_index = torch.cat([i[:20] for i in indices], dim=0)
+    val_index = torch.cat([i[20:50] for i in indices], dim=0)
+
+    test_index = torch.cat([i[50:] for i in indices], dim=0)
+    test_index = test_index[torch.randperm(test_index.size(0))]
+
+    train_mask = index_to_mask(train_index, size=g.number_of_nodes())
+    val_mask = index_to_mask(val_index, size=g.number_of_nodes())
+    test_mask = index_to_mask(test_index, size=g.number_of_nodes())
+    return g, features, labels, train_mask, val_mask, test_mask
 
 def load_reddit(args):
     data = load_data(args)
@@ -107,6 +147,10 @@ def load_dataset(args):
     elif args.dataset == 'reddit-self-loop':
         g, features, labels, train_mask, test_mask = load_reddit(args)
         return g, features, labels, train_mask, test_mask
+
+    elif args.dataset in 'amazon_photo, amazon_computers, coauthors_cs, coauthors_physics':
+        g, features, labels, train_mask, valid_mask, test_mask = load_amz_coauthors(args)
+        return g, features, labels, train_mask, valid_mask, test_mask
 
     elif args.dataset == 'ppi':
 

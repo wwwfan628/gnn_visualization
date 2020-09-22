@@ -1,6 +1,6 @@
 from src.utils.dataset import load_dataset
 from src.utils.train_model_loss_combination import train_citation, train_ppi
-from src.models.slp_gcn_loss_combination import SLP_GCN_4node
+from src.models.slp_gcn_loss_combination import SLP_GCN_4node, GCN_2layer
 
 import argparse
 import torch
@@ -24,12 +24,10 @@ def main(args):
 
     # load dataset
     print("********** LOAD DATASET **********")
-    if args.dataset in 'cora, reddit-self-loop, citeseer, pubmed':
+    if args.dataset in 'cora, reddit-self-loop, citeseer, pubmed, amazon_photos, amazon_computers, coauthors_cs, coauthors_physics':
         g, features, labels, train_mask, valid_mask, test_mask = load_dataset(args)
     elif args.dataset == 'ppi':
-        train_dataset, valid_dataset, train_dataloader, valid_dataloader = load_dataset(args)
-    elif 'tu' in args.dataset:
-        statistics, train_dataset, valid_dataset, train_dataloader, valid_dataloader = load_dataset(args)
+        train_dataset, valid_dataset, test_dataset, train_dataloader, valid_dataloader, test_dataloader = load_dataset(args)
 
     # build network
     print("********** BUILD NETWORK **********")
@@ -39,24 +37,23 @@ def main(args):
         config = yaml.load(f, Loader=yaml.FullLoader)
     h_feats = config['hidden_features']
 
-    if args.dataset in 'cora, reddit-self-loop, citeseer, pubmed':
+    if args.dataset in 'cora, reddit-self-loop, citeseer, pubmed, amazon_photos, amazon_computers, coauthors_cs, coauthors_physics':
         in_feats = features.shape[1]
         out_feats = torch.max(labels).item() + 1
     elif args.dataset == 'ppi':
         in_feats = train_dataset.features.shape[1]
         out_feats = train_dataset.labels.shape[1]
-    elif 'tu' in args.dataset:
-        in_feats = statistics[0]
-        out_feats = statistics[1].item()
 
-    if 'tu' not in args.dataset:
+    if args.loss_weight:
         slp_gcn = SLP_GCN_4node(in_feats, h_feats, out_feats).to(device)
+    elif args.without_fixpoint_loss:
+        slp_gcn = GCN_2layer(in_feats, h_feats, out_feats).to(device)
 
     print("********** TRAIN NETWORK **********")
-    if args.dataset in 'cora, reddit-self-loop, citeseer, pubmed':
+    if args.dataset in 'cora, reddit-self-loop, citeseer, pubmed, amazon_photos, amazon_computers, coauthors_cs, coauthors_physics':
         train_citation(slp_gcn, g, features, labels, train_mask, test_mask, args)
     elif args.dataset == 'ppi':
-        train_ppi(slp_gcn, train_dataloader, valid_dataloader, args)
+        train_ppi(slp_gcn, train_dataloader, test_dataloader, args)
 
     checkpoint_path = '../checkpoints/slp_gcn_' + args.dataset + '.pkl'
     checkpoint_file = os.path.join(os.getcwd(), checkpoint_path)

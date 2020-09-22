@@ -1,4 +1,6 @@
 # GNN Visualization
+This is the code implementation of semester project "Understanding and Visualizing Graph Neural Networks
+". 
 ## Usage
 All commands should be executed within the `src/run` subfolder. The relevant configuration files for training and optimization are in `src/configs/`. 
 ### 1) Training GCN Model and Find Fixpoint

@@ -9,11 +9,14 @@ from tensorboardX import SummaryWriter
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-def evaluate_citation(model, graph, features, labels, mask):
+def evaluate_citation(model, graph, features, labels, mask, args):
     # used to evaluate the performance of the model on test dataset
     model.eval()
     with torch.no_grad():
-        logits = model(graph, features)[0]
+        if args.loss_weight:
+            logits = model(graph, features)[0]
+        elif args.without_fixpoint_loss:
+            logits = model(graph, features)
         logp = F.log_softmax(logits, 1)
         loss_test = F.nll_loss(logp[mask], labels[mask])
         logits = logits[mask]
@@ -54,21 +57,22 @@ def train_citation(net, graph, features, labels, train_mask, test_mask, args):
         t0 = time.time()
 
         net.train()
-        net_outputs = net(graph, features)
-        logits = net_outputs[0]
-        logp = F.log_softmax(logits, 1)
-        loss_1 = F.nll_loss(logp[train_mask], labels[train_mask])   # normal training loss
-        weighted_loss_1 = (1/(sigma_classification**2)) * loss_1
-        # loss to find fixpoint
-        loss_2 = torch.mean(torch.abs(net_outputs[2] - net_outputs[1]))
-        weighted_loss_2 = (1/(2*sigma_fixpoint**2)) * loss_2
-        # final loss function
+
         if args.loss_weight:
+            net_outputs = net(graph, features)
+            logits = net_outputs[0]
+            logp = F.log_softmax(logits, 1)
+            loss_1 = F.nll_loss(logp[train_mask], labels[train_mask])   # normal training loss
+            weighted_loss_1 = (1/(sigma_classification**2)) * loss_1
+            # loss to find fixpoint
+            loss_2 = torch.mean(torch.abs(net_outputs[2] - net_outputs[1]))
+            weighted_loss_2 = (1/(2*sigma_fixpoint**2)) * loss_2
+            # final loss function
             loss = weighted_loss_1 + weighted_loss_2 + torch.log(sigma_fixpoint * sigma_classification)
         elif args.without_fixpoint_loss:
-            loss = loss_1
-        else:
-            loss = loss_1 + loss_2
+            logits = net(graph, features)
+            logp = F.log_softmax(logits, 1)
+            loss = F.nll_loss(logp[train_mask], labels[train_mask])  # normal training loss
 
         writer.add_scalar('Training loss function value', loss, epoch)
         if args.loss_weight:
@@ -76,8 +80,6 @@ def train_citation(net, graph, features, labels, train_mask, test_mask, args):
             writer.add_scalar('Actual classification loss', loss_1, epoch)
             writer.add_scalar('Weighted fixpoint loss', weighted_loss_2, epoch)
             writer.add_scalar('Actual fixpoint loss', loss_2, epoch)
-        else:
-            writer.add_scalar('Fixpoint loss', loss_2, epoch)
 
         optimizer.zero_grad()
         loss.backward()
@@ -85,14 +87,14 @@ def train_citation(net, graph, features, labels, train_mask, test_mask, args):
 
         if epoch % 1 == 0:  # Validation
             dur.append(time.time() - t0)
-            acc, loss_valid = evaluate_citation(net, graph, features, labels, test_mask)
+            acc, loss_valid = evaluate_citation(net, graph, features, labels, test_mask, args)
             if args.loss_weight:
                 print(
-                    "Epoch {:04d} | Loss {:.4f} | Test Acc {:.4f} | Fixpoint Loss: {:.4f} | Weighted Fixpoint Loss: {} | Time(s) {:.4f}".format(
-                        epoch + 1, loss.item(), acc, loss_2, weighted_loss_2, np.mean(dur)))
-            else:
-                print("Epoch {:04d} | Loss {:.4f} | Test Acc {:.4f} | Fixpoint Loss: {:.4f} | Time(s) {:.4f}".format(
-                    epoch + 1, loss.item(), acc, loss_2, np.mean(dur)))
+                    "Epoch {:04d} | Loss {:.4f} | Test Acc {:.4f} | Fixpoint Loss: {:.4f} | Weighted Fixpoint Loss: {:.4f} | Time(s) {:.4f}".format(
+                        epoch + 1, loss.item(), acc, loss_2.item(), weighted_loss_2.item(), np.mean(dur)))
+            elif args.without_fixpoint_loss:
+                print("Epoch {:04d} | Loss {:.4f} | Test Acc {:.4f} | Time(s) {:.4f}".format(epoch + 1, loss.item(), acc, np.mean(dur)))
+
             writer.add_scalar('Test accuracy', acc, epoch)
 
             # early stop
@@ -107,13 +109,16 @@ def train_citation(net, graph, features, labels, train_mask, test_mask, args):
 
 
 
-def evaluate_ppi(model, valid_dataloader, loss_fcn):
+def evaluate_ppi(model, valid_dataloader, loss_fcn, args):
     score_list = []
     val_loss_list = []
     for batch, (subgraph, labels) in enumerate(valid_dataloader):
         model.eval()
         with torch.no_grad():
-            output = model(subgraph, subgraph.ndata['feat'].float().to(device))[0]
+            if args.loss_weight:
+                output = model(subgraph, subgraph.ndata['feat'].float().to(device))[0]
+            elif args.without_fixpoint_loss:
+                output = model(subgraph, subgraph.ndata['feat'].float().to(device))
             loss_data = loss_fcn(output, labels.float().to(device)).item()
             predict = np.where(output.data.cpu().numpy() >= 0.5, 1, 0)
             score = f1_score(labels.data.cpu().numpy(), predict, average='micro')
@@ -155,20 +160,19 @@ def train_ppi(net, train_dataloader, valid_dataloader, args):
         net.train()
         loss_list = []
         for batch, (subgraph, labels) in enumerate(train_dataloader):
-            net_outputs = net(subgraph, subgraph.ndata['feat'].float().to(device))
-            logits = net_outputs[0]
-            loss_1 = loss_fcn(logits, labels.float().to(device))
-            weighted_loss_1 = (1 / (sigma_classification ** 2)) * loss_1
-            # loss to find fixpoint
-            loss_2 = torch.mean(torch.abs(net_outputs[2] - net_outputs[1]))
-            weighted_loss_2 = (1 / (2 * sigma_fixpoint ** 2)) * loss_2
-            # final loss function
             if args.loss_weight:
+                net_outputs = net(subgraph, subgraph.ndata['feat'].float().to(device))
+                logits = net_outputs[0]
+                loss_1 = loss_fcn(logits, labels.float().to(device))
+                weighted_loss_1 = (1 / (sigma_classification ** 2)) * loss_1
+                # loss to find fixpoint
+                loss_2 = torch.mean(torch.abs(net_outputs[2] - net_outputs[1]))
+                weighted_loss_2 = (1 / (2 * sigma_fixpoint ** 2)) * loss_2
+                # final loss function
                 loss = weighted_loss_1 + weighted_loss_2 + torch.log(sigma_fixpoint * sigma_classification)
             elif args.without_fixpoint_loss:
-                loss = loss_1
-            else:
-                loss = loss_1 + loss_2
+                logits = net(subgraph, subgraph.ndata['feat'].float().to(device))
+                loss = loss_fcn(logits, labels.float().to(device))
 
             writer.add_scalar('Training loss function value', loss, epoch)
             if args.loss_weight:
@@ -176,27 +180,21 @@ def train_ppi(net, train_dataloader, valid_dataloader, args):
                 writer.add_scalar('Actual classification loss', loss_1, epoch)
                 writer.add_scalar('Training fixpoint loss', weighted_loss_2, epoch)
                 writer.add_scalar('Actual fixpoint loss', loss_2, epoch)
-            else:
-                writer.add_scalar('Training fixpoint loss', loss_2, epoch)
 
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
             loss_list.append(loss.item())
-        loss_data = np.array(loss_list).mean()
 
         if epoch % 1 == 0:  # Validation
             dur.append(time.time() - t0)
-            mean_score, mean_val_loss = evaluate_ppi(net, valid_dataloader, loss_fcn)
+            mean_score, mean_val_loss = evaluate_ppi(net, valid_dataloader, loss_fcn, args)
             if args.loss_weight:
-                print(
-                    "Epoch {:04d} | Loss {:.4f} | F1-Score {:.4f} | Fixpoint Loss {:.4f} | Weighted Fixpoint Loss {} | Time(s) {:.4f}".format(
-                        epoch + 1, loss_data, mean_score, loss_2, weighted_loss_2,
-                        np.mean(dur)))
+                print("Epoch {:04d} | Loss {:.4f} | F1-Score {:.4f} | Fixpoint Loss {:.4f} | Weighted Fixpoint Loss {:.4f} | Time(s) {:.4f}".format(
+                        epoch + 1, mean_val_loss, mean_score, loss_2, weighted_loss_2.item(), np.mean(dur)))
             else:
-                print("Epoch {:04d} | Loss {:.4f} | F1-Score {:.4f} | Time(s) {:.4f}".format(epoch + 1, loss_data,
-                                                                                                   mean_score,
-                                                                                                   np.mean(dur)))
+                print("Epoch {:04d} | Loss {:.4f} | F1-Score {:.4f} | Time(s) {:.4f}".format(epoch + 1, mean_val_loss, mean_score, np.mean(dur)))
+
             writer.add_scalar('Micro-F1 Score', mean_score, epoch)
             # early stop
             if mean_score > best_score or best_loss > mean_val_loss:
