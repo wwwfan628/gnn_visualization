@@ -1,6 +1,6 @@
 # GNN Visualization
 This is the code implementation of semester project "Understanding and Visualizing Graph Neural Networks
-"![final report](https://github.com/wwwfan628/gnn_visualization/blob/master/doc/Report.pdf).
+"[final report](https://github.com/wwwfan628/gnn_visualization/blob/master/doc/Report.pdf).
 ## Usage
 All commands should be executed within the `src/run` subfolder. The relevant configuration files for training and optimization are in `src/configs/`. 
 ### 1) Training GCN Model and Find Fixpoint
