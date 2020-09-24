@@ -14,13 +14,3 @@ class MLP(nn.Module):
         h2 = F.relu(self.fc_2(h1))
         h3 = self.fc_3(h2)
         return h3
-
-
-class SLP(nn.Module):
-    def __init__(self, in_feats, out_feats):
-        super(MLP, self).__init__()
-        self.fc = nn.Linear(in_feats, out_feats)
-
-    def forward(self, inputs):
-        h = self.fc(inputs)
-        return h

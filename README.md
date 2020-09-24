@@ -1,9 +1,10 @@
 # GNN Visualization
-This is the code implementation of semester project "Understanding and Visualizing Graph Neural Networks
-"[final report](https://github.com/wwwfan628/gnn_visualization/blob/master/doc/Report.pdf).
+This is code implementation for semester project [Understanding and Visualizing Graph Neural Networks
+](https://github.com/wwwfan628/gnn_visualization/blob/master/doc/Report.pdf).
 ## Usage
-All commands should be executed within the `src/run` subfolder. The relevant configuration files for training and optimization are in `src/configs/`. 
-### 1) Training GCN Model and Find Fixpoint
+All commands should be executed within the `src/run` subfolder. The relevant configuration files for experiments are in `src/configs`. 
+### 1) Fixed Point
+- to excute 
 ```
 python fixpoint.py cora graph_optimization --train
 ```
@@ -91,3 +92,6 @@ Supported TUDatasets:
 </table>
 
 - To compare different fixpoint finding methods, head over to `notebooks/compare_cost_func.ipynb` and `notebooks/compare_fixpoint.ipynb`. To run `notebooks/compare_fixpoint.ipynb`, `--fix_random` must be set `True`. 
+
+### 2) Identifiability
+### 3) GNN-N
