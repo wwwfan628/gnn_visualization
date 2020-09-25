@@ -1,6 +1,10 @@
-# GNN Visualization
+# GNN Visualization 
 This is code implementation for semester project [Understanding and Visualizing Graph Neural Networks
 ](https://github.com/wwwfan628/gnn_visualization/blob/master/doc/Report.pdf).
+
+:( Sorry, readme is not updated yet...
+![](https://github.com/wwwfan628/gnn_visualization/blob/master/doc/mario.jpg)
+
 ## Usage
 All commands should be executed within the `src/run` subfolder. The relevant configuration files for experiments are in `src/configs`. 
 ### 1) Fixed Point
