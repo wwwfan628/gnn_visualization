@@ -15,6 +15,7 @@ GCN is trained with proposed joint loss function, otherwise it's trained with no
 
 - to visualize the result, head over to `notebooks/fixedpoint_visulization.ipynb`. Results from final report is shown as following:
 
+<div align=center><img width="300" height="200" src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/fixpoint.png"/></div>
 ![](https://github.com/wwwfan628/gnn_visualization/blob/master/doc/fixpoint.png)
 
 <table style="width:100%">
@@ -63,9 +64,18 @@ how many times the experiment will be repeated. `--max_gcn_layers` determine the
 ![](https://github.com/wwwfan628/gnn_visualization/blob/master/doc/acc_id_unid_cora.png) 
 
 
-
-
 ### 3) GNN-N
 
+- executing experiments of 100-layer GCN
+```
+python gnn_n_100layerGCN.py --dataset cora
+```
+
+- executing experiments of 3-layer MLP
+```
+python gnn_n_3layerMLP.py --dataset cora
+```
+
+- to visualize experiment results of 100-layer GCN, 
 
 ## Experimet Results
