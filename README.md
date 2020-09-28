@@ -59,15 +59,9 @@ how many times the experiment will be repeated. `--max_gcn_layers` determine the
 
 
 - to visualize the result, head over to `notebooks/identifiability_visulization.ipynb`. Example visualization result is shown below:
-<p float="left">
-  <img src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/id_cora.png" width=50% />
-  <img src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/rr_cora.png" width=50% />
-</p>
 
-![](https://github.com/wwwfan628/gnn_visualization/blob/master/doc/id_cora.png) 
-![](https://github.com/wwwfan628/gnn_visualization/blob/master/doc/rr_cora.png) 
-![](https://github.com/wwwfan628/gnn_visualization/blob/master/doc/acc_cora.png) 
-![](https://github.com/wwwfan628/gnn_visualization/blob/master/doc/acc_id_unid_cora.png) 
+<img src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/id_cora.png" width=50% /><img src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/rr_cora.png" width=50% />
+<img src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/acc_cora.png" width=50% /><img src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/acc_id_unid_cora.png" width=50% />
 
 
 ### 3) GNN-N
