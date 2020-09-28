@@ -15,7 +15,7 @@ GCN is trained with proposed joint loss function, otherwise it's trained with no
 
 - to visualize the result, head over to `notebooks/fixedpoint_visulization.ipynb`. Results from final report is shown as following:
 
-<div align=center><img width="450" height="300" src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/fixpoint.png"/></div>
+<div align=center><img width=50% height=50% src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/fixpoint.png"/></div>
 
 <div align=center>
 <table style="width:100%">
