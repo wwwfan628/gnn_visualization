@@ -15,7 +15,7 @@ GCN is trained with proposed joint loss function, otherwise it's trained with no
 
 - to visualize the result, head over to `notebooks/fixedpoint_visulization.ipynb`. Results from final report is shown as following:
 
-![]()
+![](https://github.com/wwwfan628/gnn_visualization/blob/master/doc/fixpoint.png)
 
 <table style="width:100%">
   <tr>
@@ -42,7 +42,7 @@ GCN is trained with proposed joint loss function, otherwise it's trained with no
     <td>75.8</td>
     <td>72.5</td>
   </tr>
-  
+  </table>
 
 
 ### 2) Identifiability
@@ -57,10 +57,10 @@ how many times the experiment will be repeated. `--max_gcn_layers` determine the
 
 
 - to visualize the result, head over to `notebooks/identifiability_visulization.ipynb`. Example visualization result is shown below:
-![]() 
-![]() 
-![]() 
-![]() 
+![](https://github.com/wwwfan628/gnn_visualization/blob/master/doc/id_cora.png) 
+![](https://github.com/wwwfan628/gnn_visualization/blob/master/doc/rr_cora.png) 
+![](https://github.com/wwwfan628/gnn_visualization/blob/master/doc/acc_cora.png) 
+![](https://github.com/wwwfan628/gnn_visualization/blob/master/doc/acc_id_unid_cora.png) 
 
 
 
