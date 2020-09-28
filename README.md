@@ -17,6 +17,7 @@ GCN is trained with proposed joint loss function, otherwise it's trained with no
 
 <div align=center><img width="450" height="300" src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/fixpoint.png"/></div>
 
+<div align=center>
 <table style="width:100%">
   <tr>
     <th>Dataset</th>
@@ -43,6 +44,7 @@ GCN is trained with proposed joint loss function, otherwise it's trained with no
     <td>72.5</td>
   </tr>
   </table>
+  </div>
 
 
 ### 2) Identifiability
