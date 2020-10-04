@@ -47,8 +47,8 @@ def main(args):
 
         acc_array[i] = best_acc  # store in the acc_array
 
-    acc_current_dataset = np.mean(acc_array)
-    print("Average accuracy for dataset {} is {}!".format(args.dataset,acc_current_dataset))
+    acc_current_dataset = np.mean(acc_array)*100
+    print("Average accuracy for dataset {} is {}% !".format(args.dataset, acc_current_dataset))
 
     # save results
     if args.fixpoint_loss:

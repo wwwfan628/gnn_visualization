@@ -13,7 +13,7 @@ where `cora` is the dataset name and may be changed to `pubmed` or `citeseer`. I
 GCN is trained with proposed joint loss function, otherwise it's trained with normal entropy loss for classification.
 `--exp_times` represent the repeating times of the experiments, the result shown in final report is the average of 10 experiments.
 
-- to visualize the result, head over to `notebooks/fixedpoint_visulization.ipynb`. Results from final report is shown as following:
+- to visualize the result, head over to `notebooks/fixedpoint_visualization.ipynb`. Results from final report is shown as following:
 
 <div align=center><img width=55% height=55% src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/fixpoint.png"/></div>
 
@@ -58,7 +58,7 @@ where `--dataset` is used to determine the dataset in the experiment and can be 
 how many times the experiment will be repeated. `--max_gcn_layers` determine the maximal layers of GCN model used in the experiment.
 
 
-- to visualize the result, head over to `notebooks/identifiability_visulization.ipynb`. Example visualization result is shown below:
+- to visualize the result, head over to `notebooks/identifiability_visualization.ipynb`. Example visualization result is shown below:
 
 <img src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/id_cora.png" width=50% /><img src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/rr_cora.png" width=50% />
 <img src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/acc_cora.png" width=50% /><img src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/acc_id_unid_cora.png" width=50% />
