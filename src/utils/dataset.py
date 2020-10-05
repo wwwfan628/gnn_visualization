@@ -41,6 +41,7 @@ def load_amz_coauthors(args):
         dataset = Coauthor(name)
     g = dataset.data[0]
     features = torch.FloatTensor(g.ndata['feat'])
+    features = (features.t() / torch.sum(features, dim=1)).t()  # normalize so that sum of each row equals 1
     labels = torch.LongTensor(g.ndata['label'])
 
     indices = []

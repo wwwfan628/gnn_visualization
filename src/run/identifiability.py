@@ -177,11 +177,11 @@ def main(args):
 if __name__ == '__main__':
 
     # get parameters
-    parser = argparse.ArgumentParser(description="Try to find fixpoint")
+    parser = argparse.ArgumentParser(description="Identifiability")
 
     parser.add_argument('--dataset', default='cora', help='choose dataset from: cora, pubmed, citeseer')
     parser.add_argument('--knn', type=int, default=1, help='find k nearest neighbourhoods among input features after recovery')
-    parser.add_argument('--repeat_times', type=int, default=5, help='experiment repeating times for single layer')
+    parser.add_argument('--repeat_times', type=int, default=10, help='experiment repeating times for single layer')
     parser.add_argument('--max_gcn_layers', type=int, default=10, help='the maxmal gcn models\'s layer')
     args = parser.parse_args()
 

@@ -1,5 +1,5 @@
 from src.utils.dataset import load_dataset
-from src.utils.train_fixedpoint import train
+from src.utils.train_fixedpoint import train_gcn
 from src.models.gcn_fixedpoint import GCN
 
 import argparse
@@ -43,7 +43,7 @@ def main(args):
 
         print("********** TRAIN NETWORK: {} Iteration **********".format(i))
         # train network
-        best_acc = train(gcn, g, features, labels, train_mask, test_mask, args)
+        best_acc = train_gcn(gcn, g, features, labels, train_mask, test_mask, args)
 
         acc_array[i] = best_acc  # store in the acc_array
 
@@ -72,7 +72,7 @@ def main(args):
 if __name__ == '__main__':
 
     # get parameters
-    parser = argparse.ArgumentParser(description="Try to find fixpoint")
+    parser = argparse.ArgumentParser(description="Fixed Point")
 
     parser.add_argument('dataset', help='choose dataset from: cora, pubmed, citeseer')
     parser.add_argument('--exp_times', type=int, default=1, help='experiment repeating times')

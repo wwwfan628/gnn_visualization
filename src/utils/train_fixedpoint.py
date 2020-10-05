@@ -23,7 +23,7 @@ def evaluate(net, graph, features, labels, mask):
         return acc, loss_test
 
 
-def train(net, graph, features, labels, train_mask, test_mask, args):
+def train_gcn(net, graph, features, labels, train_mask, test_mask, args):
     writer = SummaryWriter(logdir='../logs/fixedpoint_' + args.dataset)
 
     # read parameters for training
