@@ -40,18 +40,19 @@ def main(args):
     correctly_classified_nodes_list = []
 
     for i in range(args.exp_times):
-        print("********** BUILD NETWORK: {} Experiment **********".format(i))
+        print("********** BUILD NETWORK: {} Experiment **********".format(i+1))
         # build network
         mlp = MLP(3, in_feats, h_feats, out_feats).to(device)
 
-        print("********** TRAIN NETWORK: {} Experiment **********".format(i))
+        print("********** TRAIN NETWORK: {} Experiment **********".format(i+1))
         # train network
         _ = train_mlp(mlp, features, labels, train_mask, valid_mask, args)
 
-        print("********** TEST MLP: {} Experiment **********".format(i))
+        print("********** TEST MLP: {} Experiment **********".format(i+1))
         # test with original features
         acc[i], correctly_classified_nodes = evaluate_and_classify_nodes_mlp(mlp, features, labels, test_mask)
         correctly_classified_nodes_list.append(correctly_classified_nodes)
+        print("Test accuracy: {:.2f} !".format(acc[i] * 100))
 
     # save results
     with open('../outputs/gnn_n/3layersMLP_'+ args.dataset+'.npy', 'wb') as f:

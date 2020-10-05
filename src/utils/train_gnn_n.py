@@ -24,7 +24,7 @@ def evaluate_gcn(model, graph, features, labels, mask):
         _, indices = torch.max(logits, dim=1)
         correct = torch.sum(indices[mask] == labels[mask])
         acc = correct.item() * 1.0 / len(labels[mask])
-        return acc, loss_test
+    return acc, loss_test
 
 
 def evaluate_and_classify_nodes_gcn(model, graph, features, labels, mask):
@@ -36,7 +36,7 @@ def evaluate_and_classify_nodes_gcn(model, graph, features, labels, mask):
         correct = torch.sum(indices[mask] == labels[mask])
         acc = correct.item() * 1.0 / len(labels[mask])
         correctly_classified_nodes = set(np.arange(graph.number_of_nodes())[indices == labels])
-        return acc, correctly_classified_nodes
+    return acc, correctly_classified_nodes
 
 
 def evaluate_and_classify_nodes_with_random_features_gcn(model, graph, features, labels, mask):
@@ -49,7 +49,8 @@ def evaluate_and_classify_nodes_with_random_features_gcn(model, graph, features,
         correct = torch.sum(indices[mask] == labels[mask])
         acc = correct.item() * 1.0 / len(labels[mask])
         correctly_classified_nodes = set(np.arange(graph.number_of_nodes())[indices == labels])
-        return acc, correctly_classified_nodes
+
+    return acc, correctly_classified_nodes
 
 
 def train_gcn(net, graph, features, labels, train_mask, valid_mask, args):
@@ -106,7 +107,7 @@ def evaluate_mlp(model, features, labels, mask):
         _, indices = torch.max(logits, dim=1)
         correct = torch.sum(indices[mask] == labels[mask])
         acc = correct.item() * 1.0 / len(labels)
-        return acc, loss_test
+    return acc, loss_test
 
 
 def evaluate_and_classify_nodes_mlp(model, features, labels, mask):

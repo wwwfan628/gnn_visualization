@@ -42,24 +42,26 @@ def main(args):
     correctly_classified_nodes_random_features_list = []
 
     for i in range(args.exp_times):
-        print("********** BUILD NETWORK: {} Experiment **********".format(i))
+        print("********** BUILD NETWORK: {} Experiment **********".format(i+1))
         # build network
         gcn = GCN(100, in_feats, h_feats, out_feats).to(device)
 
-        print("********** TRAIN NETWORK: {} Experiment **********".format(i))
+        print("********** TRAIN NETWORK: {} Experiment **********".format(i+1))
         # train network
         _ = train_gcn(gcn, g, features, labels, train_mask, valid_mask, args)
 
-        print("********** TEST WITH ORIGINAL FEATURES: {} Experiment **********".format(i))
+        print("********** TEST WITH ORIGINAL FEATURES: {} Experiment **********".format(i+1))
         # test with original features
         acc_original_features[i], correctly_classified_nodes_original_features = evaluate_and_classify_nodes_gcn(gcn, g, features, labels, test_mask)
         correctly_classified_nodes_original_features_list.append(correctly_classified_nodes_original_features)
+        print("Test accuracy with original features: {:.2f} !".format(acc_original_features[i]*100))
 
-        print("********** TEST WITH RANDOM FEATURES: {} Experiment **********".format(i))
+        print("********** TEST WITH RANDOM FEATURES: {} Experiment **********".format(i+1))
         # test with random features
         for j in range(args.num_random_features):
             acc_random_features[i, j], correctly_classified_nodes_random_features = evaluate_and_classify_nodes_with_random_features_gcn(gcn, g, features, labels, test_mask)
             correctly_classified_nodes_random_features_list.append(correctly_classified_nodes_random_features)
+            print("Test accuracy with random features {}: {:.2f} !".format(j+1, acc_random_features[i, j]*100))
 
     # save results
     with open('../outputs/gnn_n/100layersGCN_'+ args.dataset+'.npy', 'wb') as f:
