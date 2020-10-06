@@ -106,7 +106,7 @@ def evaluate_mlp(model, features, labels, mask):
         loss_test = F.nll_loss(logp[mask], labels[mask])
         _, indices = torch.max(logits, dim=1)
         correct = torch.sum(indices[mask] == labels[mask])
-        acc = correct.item() * 1.0 / len(labels)
+        acc = correct.item() * 1.0 / len(labels[mask])
     return acc, loss_test
 
 
