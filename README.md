@@ -14,9 +14,7 @@ GCN is trained with proposed joint loss function, otherwise it's trained with no
 `--exp_times` represent the repeating times of the experiments, the result shown in final report is the average of 10 experiments.
 
 - to visualize the accuracy on 3 citation datasets, apply the above command for each dataset respectively and then 
-head over to `notebooks/fixedpoint_visualization.ipynb`. Results taken from final report:
-
-<div align=center><img width=55% height=55% src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/fixpoint.png"/></div>
+head over to `notebooks/fixedpoint_visualization.ipynb`. Visulization of test accuracy taken from final report:
 
 <div align=center>
 <table style="width:100%">
@@ -47,6 +45,7 @@ head over to `notebooks/fixedpoint_visualization.ipynb`. Results taken from fina
   </table>
   </div>
 
+<div align=center><img width=55% height=55% src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/fixpoint.png"/></div>
 
 ### 2) Identifiability
 
@@ -59,7 +58,8 @@ where `--dataset` is used to determine the dataset in the experiment and can be 
 how many times the experiment will be repeated. `--max_gcn_layers` determine the maximal layers of GCN model used in the experiment.
 
 
-- Results are visualized in the script `notebooks/identifiability_visualization.ipynb`. Example visualization results are shown below:
+- Results are visualized in the script `notebooks/identifiability_visualization.ipynb`. Example visualization results of cora dataset 
+are shown below:
 
 <img src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/id_cora.png" width=50% /><img src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/rr_cora.png" width=50% />
 <img src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/acc_cora.png" width=50% /><img src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/acc_id_unid_cora.png" width=50% />
@@ -97,29 +97,22 @@ value is derived. `--mlp_exp_times` must be set the same as `--exp_times` used i
 
 
 - After executing experiments and computing GNN-N values for all 7 datasets, you can visualize the results using 
-`notebooks/gnn_n_3layerMLP_visualization.ipynb`. 
+`notebooks/gnn_n_3layerMLP_visualization.ipynb`. Visulization of GNN-N values for the 7 node classification datasets are listed in the following:
+
 <div align=center><img width=70% height=70% src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/GNN-N.png"/></div> 
 
 
-- The script `notebooks/gnn_n_3layerMLP_visualization.ipynb` is used to visualize results of 3-layer MLP experiments.
+- The script `notebooks/gnn_n_3layerMLP_visualization.ipynb` is used to visualize results of 3-layer MLP experiments, 
+for example test accuracy and repeating rates of 3-layer MLP:
+
 <div align=center><img width=80% height=80% src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/MLP_acc_rr.png"/></div> 
 
-- Results of 100-layer GCN eperiments can be visualized in `notebooks/gnn_n_100layerGCN_visualization.ipynb`, for example
-the accuracy with random features and original features and different repeating rates.
-<div align=center>
-    <img width=50% height=50% src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/100layerGCN_TTRR.png"/>
-    <br>
-    <div>TT-RR of cora dataset.</div>
-</div>
+- Results of 100-layer GCN eperiments can be visualized in `notebooks/gnn_n_100layerGCN_visualization.ipynb`. The following image
+shows the TT-RR of cora.
+
+<img width=50% height=50% src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/100layerGCN_TTRR.png"/>
+
+Meanwhile, it also includes the visulization of accuracy, R-RR and RO-RR.
+
 <div align=center><img width=80% height=80% src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/100GCN_acc_rr.png"/></div>
   
-<div align=center>
-    <img style="border-radius: 0.3125em;
-    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
-    src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/100layerGCN_TTRR.png">
-    <br>
-    <div style="color:orange; border-bottom: 1px solid #d9d9d9;
-    display: inline-block;
-    color: #999;
-    padding: 2px;">TT-RR of cora dataset.</div>
-</div>
