@@ -67,7 +67,7 @@ how many times the experiment will be repeated. `--max_gcn_layers` determine the
 
 ### 3) GNN-N
 
-- To compute <img src="http://latex.codecogs.com/gif.latex?\hat{P}^{MLP}_{i,features} /> executing experiments of 100-layer GCN
+- To compute ![](http://latex.codecogs.com/gif.latex?\hat{P}^{MLP}_{i,features}) executing experiments of 100-layer GCN
 ```
 python gnn_n_100layerGCN.py --dataset cora --exp_times 10 --num_random_features 10
 ```
