@@ -98,14 +98,24 @@ value is derived. `--mlp_exp_times` must be set the same as `--exp_times` used i
 
 - After executing experiments and computing GNN-N values for all 7 datasets, you can visualize the results using 
 `notebooks/gnn_n_3layerMLP_visualization.ipynb`. 
-<div align=center><img width=55% height=55% src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/GNN-N.png"/></div> 
+<div align=center><img width=70% height=70% src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/GNN-N.png"/></div> 
 
 
 - The script `notebooks/gnn_n_3layerMLP_visualization.ipynb` is used to visualize results of 3-layer MLP experiments.
-<div align=center><img width=55% height=55% src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/MLP_acc_rr.png"/></div> 
+<div align=center><img width=80% height=80% src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/MLP_acc_rr.png"/></div> 
 
 - Results of 100-layer GCN eperiments can be visualized in `notebooks/gnn_n_100layerGCN_visualization.ipynb`, for example
 the accuracy with random features and original features and different repeating rates.
-<div align=center><img width=55% height=55% src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/100GCN_acc_rr.png"/></div>
-<div align=center><img width=55% height=55% src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/100layerGCN_TTRR.png"/></div>  
-
+<div align=center><img width=50% height=50% src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/100layerGCN_TTRR.png"/></div>
+<div align=center><img width=80% height=80% src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/100GCN_acc_rr.png"/></div>
+  
+<div style="text-align: center;">
+    <img style="border-radius: 0.3125em;
+    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
+    src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/100layerGCN_TTRR.png">
+    <br>
+    <div style="color:orange; border-bottom: 1px solid #d9d9d9;
+    display: inline-block;
+    color: #999;
+    padding: 2px;">TT-RR of cora dataset.</div>
+</div>
