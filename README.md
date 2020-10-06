@@ -109,7 +109,7 @@ the accuracy with random features and original features and different repeating 
 <div align=center><img width=50% height=50% src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/100layerGCN_TTRR.png"/></div>
 <div align=center><img width=80% height=80% src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/100GCN_acc_rr.png"/></div>
   
-<div style="text-align: center;">
+<center>
     <img style="border-radius: 0.3125em;
     box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
     src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/100layerGCN_TTRR.png">
@@ -118,4 +118,4 @@ the accuracy with random features and original features and different repeating 
     display: inline-block;
     color: #999;
     padding: 2px;">TT-RR of cora dataset.</div>
-</div>
+</center>
