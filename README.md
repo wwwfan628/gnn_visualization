@@ -14,7 +14,7 @@ GCN is trained with proposed joint loss function, otherwise it's trained with no
 `--exp_times` represent the repeating times of the experiments, the result shown in final report is the average of 10 experiments.
 
 - to visualize the accuracy on 3 citation datasets, apply the above command for each dataset respectively and then 
-head over to `notebooks/fixedpoint_visualization.ipynb`. Visulization of test accuracy taken from final report:
+head over to `notebooks/fixedpoint_visualization.ipynb`. Visualization of test accuracy taken from final report:
 
 <div align=center>
 <table style="width:100%">
@@ -97,7 +97,7 @@ value is derived. `--mlp_exp_times` must be set the same as `--exp_times` used i
 
 
 - After executing experiments and computing GNN-N values for all 7 datasets, you can visualize the results using 
-`notebooks/gnn_n_3layerMLP_visualization.ipynb`. Visulization of GNN-N values for the 7 node classification datasets are listed in the following:
+`notebooks/gnn_n_3layerMLP_visualization.ipynb`. Visualization of GNN-N values for the 7 node classification datasets are listed in the following:
 
 <div align=center><img width=60% height=60% src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/GNN-N.png"/></div> 
 
@@ -107,13 +107,14 @@ for example test accuracy and repeating rates of 3-layer MLP:
 
 <div align=center><img width=70% height=70% src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/MLP_acc_rr.png"/></div> 
 
-- Results of 100-layer GCN eperiments can be visualized in `notebooks/gnn_n_100layerGCN_visualization.ipynb`. The following image
-shows the visulization results of accuracy, R-RR and RO-RR.
+- Results of 100-layer GCN experiments can be visualized in `notebooks/gnn_n_100layerGCN_visualization.ipynb`. The following image
+shows the visualization results of accuracy, R-RR and RO-RR.
+
+<div align=center><img width=80% height=80% src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/100GCN_acc_rr.png"/></div>
+
+Meanwhile, this script also includes the visualization results of TT-RR with heatmaps. The following image shows TT-RR of cora dataset 
+and is taken from appendix of final report.
 
 <div align=center><img width=50% height=50% src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/100layerGCN_TTRR.png"/></div>
 
-Meanwhile, this script also includes the visulization results of TT-RR with heatmaps. The following image shows TT-RR of cora dataset 
-and is taken from appendix of final report.
-
-<div align=center><img width=80% height=80% src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/100GCN_acc_rr.png"/></div>
   
