@@ -106,7 +106,11 @@ value is derived. `--mlp_exp_times` must be set the same as `--exp_times` used i
 
 - Results of 100-layer GCN eperiments can be visualized in `notebooks/gnn_n_100layerGCN_visualization.ipynb`, for example
 the accuracy with random features and original features and different repeating rates.
-<div align=center><img width=50% height=50% src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/100layerGCN_TTRR.png"/></div>
+<div align=center>
+    <img width=50% height=50% src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/100layerGCN_TTRR.png"/>
+    <br>
+    <div>TT-RR of cora dataset.</div>
+</div>
 <div align=center><img width=80% height=80% src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/100GCN_acc_rr.png"/></div>
   
 <div align=center>
