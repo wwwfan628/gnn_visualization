@@ -108,11 +108,12 @@ for example test accuracy and repeating rates of 3-layer MLP:
 <div align=center><img width=70% height=70% src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/MLP_acc_rr.png"/></div> 
 
 - Results of 100-layer GCN eperiments can be visualized in `notebooks/gnn_n_100layerGCN_visualization.ipynb`. The following image
-shows the TT-RR of cora.
+shows the visulization results of accuracy, R-RR and RO-RR.
 
 <div align=center><img width=50% height=50% src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/100layerGCN_TTRR.png"/></div>
 
-Meanwhile, it also includes the visulization of accuracy, R-RR and RO-RR.
+Meanwhile, this script also includes the visulization results of TT-RR with heatmaps. The following image shows TT-RR of cora dataset 
+and is taken from appendix of final report.
 
 <div align=center><img width=80% height=80% src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/100GCN_acc_rr.png"/></div>
   
