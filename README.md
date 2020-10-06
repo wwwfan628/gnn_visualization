@@ -105,7 +105,7 @@ value is derived. `--mlp_exp_times` must be set the same as `--exp_times` used i
 - The script `notebooks/gnn_n_3layerMLP_visualization.ipynb` is used to visualize results of 3-layer MLP experiments, 
 for example test accuracy and repeating rates of 3-layer MLP:
 
-<div align=center><img width=75% height=75% src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/MLP_acc_rr.png"/></div> 
+<div align=center><img width=70% height=70% src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/MLP_acc_rr.png"/></div> 
 
 - Results of 100-layer GCN eperiments can be visualized in `notebooks/gnn_n_100layerGCN_visualization.ipynb`. The following image
 shows the TT-RR of cora.
