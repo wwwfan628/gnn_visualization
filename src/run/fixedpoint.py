@@ -74,7 +74,7 @@ if __name__ == '__main__':
     # get parameters
     parser = argparse.ArgumentParser(description="Fixed Point")
 
-    parser.add_argument('dataset', help='choose dataset from: cora, pubmed, citeseer')
+    parser.add_argument('--dataset', default='cora', help='choose dataset from: cora, pubmed, citeseer')
     parser.add_argument('--exp_times', type=int, default=1, help='experiment repeating times')
     parser.add_argument('--fixpoint_loss', action='store_true', help='if true add fixpoint loss, else only classification loss')
     args = parser.parse_args()

@@ -7,13 +7,14 @@ All commands should be executed within the `src/run` subfolder. The relevant con
 ### 1) Fixed Point
 - training GCN with joint loss function
 ```
-python fixpoint.py cora --fixpoint_loss --exp_times 10
+python fixpoint.py --dataset cora --fixpoint_loss --exp_times 10
 ```
 where `cora` is the dataset name and may be changed to `pubmed` or `citeseer`. If `--fixpoint_loss` is set `True`, then 
 GCN is trained with proposed joint loss function, otherwise it's trained with normal entropy loss for classification.
 `--exp_times` represent the repeating times of the experiments, the result shown in final report is the average of 10 experiments.
 
-- to visualize the result, head over to `notebooks/fixedpoint_visualization.ipynb`. Results from final report is shown as following:
+- to visualize the accuracy on three citation datasets, apply the above command for each dataset respectively and then 
+head over to `notebooks/fixedpoint_visualization.ipynb`. Results taken from final report:
 
 <div align=center><img width=55% height=55% src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/fixpoint.png"/></div>
 
@@ -58,7 +59,7 @@ where `--dataset` is used to determine the dataset in the experiment and can be 
 how many times the experiment will be repeated. `--max_gcn_layers` determine the maximal layers of GCN model used in the experiment.
 
 
-- to visualize the result, head over to `notebooks/identifiability_visualization.ipynb`. Example visualization result is shown below:
+- results are visualized in script `notebooks/identifiability_visualization.ipynb`. Example visualization results are shown below:
 
 <img src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/id_cora.png" width=50% /><img src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/rr_cora.png" width=50% />
 <img src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/acc_cora.png" width=50% /><img src="https://github.com/wwwfan628/gnn_visualization/blob/master/doc/acc_id_unid_cora.png" width=50% />
@@ -66,14 +67,14 @@ how many times the experiment will be repeated. `--max_gcn_layers` determine the
 
 ### 3) GNN-N
 
-- executing experiments of 100-layer GCN
+- To compute $\hat{P}^{MLP}_{i,features}$ executing experiments of 100-layer GCN
 ```
-python gnn_n_100layerGCN.py --dataset cora
+python gnn_n_100layerGCN.py --dataset cora --exp_times 10 --num_random_features 10
 ```
 
 - executing experiments of 3-layer MLP
 ```
-python gnn_n_3layerMLP.py --dataset cora
+python gnn_n_3layerMLP.py --dataset cora --exp_times 10
 ```
 
 - to visualize experiment results of 100-layer GCN, 
