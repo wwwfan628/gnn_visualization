@@ -79,7 +79,7 @@ def main(args):
 if __name__ == '__main__':
 
     # get parameters
-    parser = argparse.ArgumentParser(description="GNN-N: 100-layer GCN")
+    parser = argparse.ArgumentParser(description="GNN-N")
 
     parser.add_argument('--dataset', default='cora', help='choose dataset from: cora, pubmed, citeseer, amazon_photo, amazon_computers, coauthors_cs, coauthors_physics')
     parser.add_argument('--mlp_exp_times', type=int, default=10, help='repeating times of 3-layer MLP experiment')
