@@ -87,7 +87,7 @@ determines how many times the experiment process will be repeated.
 
 - computing GNN-N values
 ```
-python gnn_n.py --dataset cora --mlp_exp_times 10 --gcn_exp_times 10 --`gcn_num_random_features` 10
+python gnn_n.py --dataset cora --mlp_exp_times 10 --gcn_exp_times 10 --gcn_num_random_features 10
 ```
 In this step, experimental possibilities ![](http://latex.codecogs.com/gif.latex?\hat{P}^{MLP}_{i,features}) and 
 ![](http://latex.codecogs.com/gif.latex?\hat{P}_{i,graph\,structure}^{100\text{-}layer\,GCN}) are computed, and then GNN-N 
